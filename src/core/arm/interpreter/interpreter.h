@@ -44,12 +44,10 @@ namespace Interpreter {
     typedef void (*ArmInstruction)(struct State*, u32);
     namespace Arm {
 
-        template <bool thumb>
-        void bx(State* cpu, u32 instruction);
-        template <bool thumb>
         void bl(State* cpu, u32 instruction);
-        template <bool thumb>
-        void swi(State* cpu, u32 instruction);
+        template <bool thumb> void bx(State* cpu, u32 instruction);
+        template <bool thumb> void blx_reg(State* cpu, u32 instruction);
+        template <bool thumb> void swi(State* cpu, u32 instruction);
         void bkpt(State* cpu, u32 instruction);
         void alu(State* cpu, u32 instruction);
         void mul(State* cpu, u32 instruction);
@@ -58,8 +56,7 @@ namespace Interpreter {
         void clz(State* cpu, u32 instruction);
         void qadd(State* cpu, u32 instruction);
         void mrs(State* cpu, u32 instruction);
-        template <bool thumb>
-        void mrs(State* cpu, u32 instruction);
+        template <bool thumb> void mrs(State* cpu, u32 instruction);
         void ldr_str(State* cpu, u32 instruction);
         void ldrh_strh(State* cpu, u32 instruction);
         void ldm_stm(State* cpu, u32 instruction);

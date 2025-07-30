@@ -13,6 +13,7 @@ namespace Interpreter {
     template <bool rdIsUnused = false>
     inline void aluSetRD15Flags(State* cpu, bool s) {
         if constexpr (rdIsUnused) {
+            // What happens here again?
             if (s) {
                 printAndCrash("unused RD=15, S=1");
             }

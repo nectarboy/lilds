@@ -91,9 +91,9 @@ void State::setMode(Mode val) {
     reg[14] = bankedreg[bank][7];
 
 }
-void State::setThumb(bool val) {
-    if (cpsr.t != val) {
-        cpsr.t = val;
+void State::setThumb(bool t) {
+    if (cpsr.t != t) {
+        cpsr.t = t;
         issuePipelineFlush();
     }
 }
@@ -114,66 +114,67 @@ void State::execute() {
                 else
                     reg[15] &= 0xffff'fffe;
                 pipelineFetch<0, Access::N>(cpsr.t);
+                pipelineStage++;
             }
             else {
                 pipelineFetch<1, Access::S>(cpsr.t);
                 nextInstructionAccessType = Access::S;
+                pipelineStage++;
             }
-
-            pipelineStage++;
             cycles++;
         }
         // Execution starts
         else if (exeStage == -1) {
-            currentOpcode = pipeline[0];
-            pipeline[0] = pipeline[1];
-
-            exeStage = 0;
-            if (!cpsr.t) {
-                pipeline[1] = readCode32(reg[15], nextInstructionAccessType);
-                nextInstructionAccessType = Access::S;
-                Interpreter::ArmInstruction instr = Interpreter::Arm::decode(currentOpcode, type);
-                currentInstructionFun = (void*)instr;
-                instr(this, currentOpcode);
-
-                if (pipelineStage != 0)
-                    reg[15] += 4;
+            if (exceptionPending) {
+                handleException();
+                exceptionPending = false;
             }
             else {
-                pipeline[1] = readCode16(reg[15], nextInstructionAccessType);
-                nextInstructionAccessType = Access::S;
-                Interpreter::ThumbInstruction instr = Interpreter::Thumb::decode(currentOpcode, type);
-                currentInstructionFun = (void*)instr;
-                instr(this, currentOpcode);
+                currentInstruction = pipeline[0];
+                pipeline[0] = pipeline[1];
 
-                if (pipelineStage != 0)
-                    reg[15] += 2;
+                exeStage = 0;
+                if (!cpsr.t) {
+                    pipeline[1] = readCode32(reg[15], nextInstructionAccessType);
+                    nextInstructionAccessType = Access::S;
+
+                    Interpreter::ArmInstruction instr = Interpreter::Arm::decode(currentInstruction, type);
+                    currentInstructionFun = (void*)instr;
+                    instr(this, currentInstruction);
+
+                    if (pipelineStage != 0)
+                        reg[15] += 4;
+                }
+                else {
+                    pipeline[1] = readCode16(reg[15], nextInstructionAccessType);
+                    nextInstructionAccessType = Access::S;
+
+                    Interpreter::ThumbInstruction instr = Interpreter::Thumb::decode(currentInstruction, type);
+                    currentInstructionFun = (void*)instr;
+                    instr(this, currentInstruction);
+
+                    if (pipelineStage != 0)
+                        reg[15] += 2;
+                }
             }
-
-            // only handle exceptions when instruction is fully complete
-            if (exeStage == -1)
-                handleExceptions();
         }
         // Multicycle execution
         else {
             exeStage++;
             if (!cpsr.t) {
-                Interpreter::ArmInstruction instr = (Interpreter::ArmInstruction)currentInstructionFun;
-                instr(this, currentOpcode);
+                Interpreter::ArmInstruction instr = static_cast<Interpreter::ArmInstruction>(currentInstructionFun);
+                instr(this, currentInstruction);
             }
             else {
-                Interpreter::ThumbInstruction instr = (Interpreter::ThumbInstruction)currentInstructionFun;
-                instr(this, currentOpcode);
+                Interpreter::ThumbInstruction instr = static_cast<Interpreter::ThumbInstruction>(currentInstructionFun);
+                instr(this, currentInstruction);
             }
-
-            if (exeStage == -1)
-                handleExceptions();
         }
     }
 
     // TODO: theres a second execution stage where exceptions are handled
 }
-void State::handleExceptions() {
+void State::handleException() {
 
 }
 void State::init() {

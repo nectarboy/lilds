@@ -38,6 +38,17 @@ namespace Arm {
         Bus32
     };
 
+    enum class Exception {
+        Reset,
+        UndefinedInstruction,
+        SWI,
+        PrefetchAbort,
+        DataAbort,
+        AddressExceeds26Bits,
+        NormalInterrupt,
+        FastInterrupt
+    };
+
     namespace {
         struct CPSR {
             Mode mode = (Mode)0;
@@ -93,7 +104,7 @@ namespace Arm {
 
         // execution methods
         void execute();
-        void handleExceptions();
+        void handleException();
         void init();
         void finishInstruction();
 
@@ -143,8 +154,10 @@ namespace Arm {
         // private state
         u32 pipeline[2];
         int pipelineStage = 0;
-        u32 currentOpcode = 0;
+        u32 currentInstruction = 0;
         void* currentInstructionFun = nullptr;
+        bool exceptionPending = false;
+        Exception exceptionType;
     };
 
 }

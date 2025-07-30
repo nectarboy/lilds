@@ -5,39 +5,45 @@
 #include "interpreter.h"
 #include "alu.cpp"
 
+// TODO: templatize all functions checking for arm types later
+
 namespace Interpreter {
     using namespace Arm;
     
     namespace Arm {
 
         // branch instructions
-        template <bool thumb>
         void bl(State* cpu, u32 instruction) {
             cpu->cycles++;
             if (cpu->exeStage == 0) {
-                if (!evalConditionCode(cpu, CC((instruction >> 28) & 0xf))) {
+                CC cc = CC((instruction >> 28) & 0xf);
+                bool isBx = (cpu->type == Type::Arm9) & (cc == CC::UND);
+                if (!isBx && !evalConditionCode(cpu, cc)) {
                     cpu->finishInstruction();
                     return;
                 }
 
-                bool l = (instruction >> 24) & 1;
-                if (l)
-                    cpu->reg[14] = cpu->reg[15] - 4;
-
                 u32 off = instruction & 0xff'ffff;
                 off |= 0xff00'0000 * (off >> 23);
-                constexpr u32 mul = thumb ? 2 : 4;
-                off *= mul;
+                off *= 4;
+
+                bool l = (instruction >> 24) & 1;
+                cpu->cpsr.t = isBx;
+                off += isBx * l * 2;
+                if (l || isBx)
+                    cpu->reg[14] = cpu->reg[15] - 4;
 
                 cpu->reg[15] += off;
                 cpu->issuePipelineFlush();
                 cpu->finishInstruction();
             }
+            // TODO: would this method be faster?
             else if (cpu->exeStage == 1) {
-                cpu->pipelineFetch<0, Access::N>(thumb);
+                cpu->pipelineFetch<0, Access::N>(false);
             }
             else if (cpu->exeStage == 2) {
-                cpu->pipelineFetch<1, Access::S>(thumb);
+                cpu->pipelineFetch<1, Access::S>(false);
+                // cpu->pipelineStage = 2;
                 cpu->finishInstruction();
             }
         }
@@ -51,8 +57,8 @@ namespace Interpreter {
                     return;
                 }
 
-                uint rn = instruction & 0xf;
-                cpu->setThumbMode((bool)(cpu->reg[rn] & 1));
+                auto rn = instruction & 0xf;
+                cpu->cpsr.t = ((bool)(cpu->reg[rn] & 1));
                 u32 addr = cpu->reg[rn];
 
                 // if constexpr (thumb) {
@@ -60,7 +66,7 @@ namespace Interpreter {
                 //     if (rn == 15)
                 //         addr &= ~2;
                 // }
-                addr & 0xffff'fffc;
+                addr &= 0xffff'fffc;
 
                 cpu->reg[15] = addr;
                 cpu->issuePipelineFlush();
@@ -71,6 +77,39 @@ namespace Interpreter {
             }
             else if (cpu->exeStage == 2) {
                 cpu->pipelineFetch<1, Access::S>(thumb);
+                cpu->finishInstruction();
+            }
+        }
+
+        template <bool thumb>
+        void blx_reg(State* cpu, u32 instruction) {
+            cpu->cycles++;
+            if (cpu->exeStage == 0) {
+                if (!evalConditionCode(cpu, CC((instruction >> 28) & 0xf))) {
+                    cpu->finishInstruction();
+                    return;
+                }
+
+                auto rn = instruction & 0xf;
+                cpu->cpsr.t = ((bool)(cpu->reg[rn] & 1));
+                u32 addr = cpu->reg[rn];
+                addr &= 0xffff'fffc;
+                
+                if constexpr (thumb)
+                    cpu->reg[14] = cpu->reg[15] - 2 + 1; // Thumb bit set
+                else
+                    cpu->reg[14] = cpu->reg[15] - 4;
+
+                cpu->reg[15] = addr;
+                cpu->issuePipelineFlush();
+                cpu->finishInstruction();
+            }
+            else if (cpu->exeStage == 1) {
+                cpu->pipelineFetch<0, Access::N>(true);
+            }
+            else if (cpu->exeStage == 2) {
+                cpu->pipelineFetch<1, Access::S>(true);
+                // cpu->pipelineStage = 2;
                 cpu->finishInstruction();
             }
         }

@@ -74,10 +74,12 @@ namespace Bus {
                     arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
 
                 addr &= 0x3fffff;
-                if constexpr (is_same_v<T, u8>)
+                if constexpr (is_same_v<T, u8>) {
                     mainRam[addr] = (u8)(val);
-                if constexpr (is_same_v<T, u16>)
+                }
+                if constexpr (is_same_v<T, u16>) {
                     mainRam[addr+1] = (u8)(val >> 8);
+                }
                 if constexpr (is_same_v<T, u32>) {
                     mainRam[addr+2] = (u8)(val >> 16);
                     mainRam[addr+3] = (u8)(val >> 24);
