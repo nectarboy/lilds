@@ -11,12 +11,19 @@
 #include <cassert>
 
 //#include "../helpers.h"
-#include "../core/arm/arm7.h"
+#include "../core/ds.h"
+#include "../core/arm/arm.h"
+#include "../core/bus/bus.h"
 
 int main(int argc, char* argv[]) {
-	Arm7::State arm7;
-	arm7.writeReg(420, 0);
-	print(arm7.readReg(0));
+    std::cout << __DATE__ << "\t" << __TIME__ << std::endl;
 
-	std::cout << "Hello FUCK YOU!" << std::endl;
+    DS::State lilds;
+	// lilds.arm7->writeReg(0, 0xBADFEEL);
+	print(static_cast<Arm::State*>(lilds.arm7)->getTypeString());
+	print(static_cast<Arm::State*>(lilds.arm9)->getTypeString());
+
+	std::cout << "Hello!" << std::endl;
+
+    return 0;
 }
