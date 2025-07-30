@@ -22,10 +22,21 @@ namespace Bus {
         // memory methods (TODO: 16 and 32 bit reads that dont call 8 reads, is possible probably)
         u8 arm7Read8(Arm::State* arm, u32 addr, Arm::Access access);
         void arm7Write8(Arm::State* arm, u32 addr, u32 val, Arm::Access access);
-        
+
         template <Arm::AccessType accessType>
         u8 arm9Read8(Arm::State* arm, u32 addr, Arm::Access access);
         void arm9Write8(Arm::State* arm, u32 addr, u32 val, Arm::Access access);
+
+
+        template <typename T, Arm::AccessType accessType>
+        T arm7Read(Arm::State* arm, u32 addr, Arm::Access access);
+        template <typename T, Arm::AccessType accessType>
+        T arm7Write(Arm::State* arm, u32 addr, T val, Arm::Access access);
+
+        template <typename T, Arm::AccessType accessType>
+        T arm9Read(Arm::State* arm, u32 addr, Arm::Access access);
+        template <typename T, Arm::AccessType accessType>
+        T arm9Write(Arm::State* arm, u32 addr, T val, Arm::Access access);
     };
 
 }

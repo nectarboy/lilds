@@ -7,14 +7,15 @@ namespace Arm {
     // memory methods
     inline u8 State::read8(u32 addr, Access access) {
         Bus::State* bus = static_cast<Bus::State*>(ds->bus);
-        u8 val = bus->arm9Read8<AccessType::Data>(this, addr, access);
-        return val;
+        return bus->arm9Read<u8, AccessType::Data>(this, addr, access);
     }
     inline u16 State::read16(u32 addr, Access access) {
-        return 0;
+        Bus::State* bus = static_cast<Bus::State*>(ds->bus);
+        return bus->arm9Read<u16, AccessType::Data>(this, addr, access);
     }
     inline u32 State::read32(u32 addr, Access access) {
-        return 0;
+        Bus::State* bus = static_cast<Bus::State*>(ds->bus);
+        return bus->arm9Read<u32, AccessType::Data>(this, addr, access);
     }
     inline void State::write8(u32 addr, u8 val, Access access) {}
     inline void State::write16(u32 addr, u16 val, Access access) {}
