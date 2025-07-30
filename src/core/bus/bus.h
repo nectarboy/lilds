@@ -36,7 +36,7 @@ namespace Bus {
         template <typename T, Arm::AccessType accessType>
         T arm9Read(Arm::State* arm, u32 addr, Arm::Access access);
         template <typename T, Arm::AccessType accessType>
-        T arm9Write(Arm::State* arm, u32 addr, T val, Arm::Access access);
+        void arm9Write(Arm::State* arm, u32 addr, T val, Arm::Access access);
     };
 
 }

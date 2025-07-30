@@ -10,220 +10,220 @@ namespace Arm {
 
 // register methods
 u32 State::readReg(int r) {
-	return reg[r];
+    return reg[r];
 }
 void State::writeReg(int r, u32 val) {
-	reg[r] = val;
-	if (r == 15) {
-		issuePipelineFlush();
-	}
+    reg[r] = val;
+    if (r == 15) {
+        issuePipelineFlush();
+    }
 }
 
 u32 State::readCPSR() {
-	u32 val = (int)(cpsr.mode) | (cpsr.t << 5) | (cpsr.f << 6) | (cpsr.i << 7) | (cpsr.v << 28) | (cpsr.c << 29) | (cpsr.z << 30) | (cpsr.n << 31);
-	if (type == Type::Arm9) {
-		val |= (cpsr.q << 27);
-	}
-	return val;
+    u32 val = (int)(cpsr.mode) | (cpsr.t << 5) | (cpsr.f << 6) | (cpsr.i << 7) | (cpsr.v << 28) | (cpsr.c << 29) | (cpsr.z << 30) | (cpsr.n << 31);
+    if (type == Type::Arm9) {
+        val |= (cpsr.q << 27);
+    }
+    return val;
 }
 void State::writeCPSR(u32 val) {
-	setMode(Mode(val & 0b11111));
-	setThumb((val >> 5) & 1);
-	cpsr.f = (val >> 6) & 1;
-	cpsr.i = (val >> 7) & 1;
-	cpsr.q = (val >> 27) & 1;
-	cpsr.v = (val >> 28) & 1;
-	cpsr.c = (val >> 29) & 1;
-	cpsr.z = (val >> 30) & 1;
-	cpsr.n = (val >> 31) & 1;
+    setMode(Mode(val & 0b11111));
+    setThumb((val >> 5) & 1);
+    cpsr.f = (val >> 6) & 1;
+    cpsr.i = (val >> 7) & 1;
+    cpsr.q = (val >> 27) & 1;
+    cpsr.v = (val >> 28) & 1;
+    cpsr.c = (val >> 29) & 1;
+    cpsr.z = (val >> 30) & 1;
+    cpsr.n = (val >> 31) & 1;
 }
 
 u32 State::readSPSR(int bank) {
-	if (bank == 0) {
-		return readCPSR();
-	}
-	else {
-		return spsr[bank];
-	}
+    if (bank == 0) {
+        return readCPSR();
+    }
+    else {
+        return spsr[bank];
+    }
 }
 void State::writeSPSR(u32 val, int bank) {
-	if (bank != 0) {
-		if (type == Type::Arm7)
-			val &= 0xf000'00ff;
-		else
-			val &= 0xf800'00ff;
-		spsr[bank] = val;
-	}
+    if (bank != 0) {
+        if (type == Type::Arm7)
+            val &= 0xf000'00ff;
+        else
+            val &= 0xf800'00ff;
+        spsr[bank] = val;
+    }
 }
 
 void State::copyCPSRToSPSR() {
-	writeSPSR(readCPSR(), getModeBank(cpsr.mode));
+    writeSPSR(readCPSR(), getModeBank(cpsr.mode));
 }
 void State::copySPSRToCPSR() {
-	int bank = getModeBank(cpsr.mode);
-	if (bank != 0) {
-		writeCPSR(spsr[bank]);
-	}
+    int bank = getModeBank(cpsr.mode);
+    if (bank != 0) {
+        writeCPSR(spsr[bank]);
+    }
 }
 
 // mode methods
 void State::setMode(Mode val) {
-	int bank = getModeBank(val);
-	if (bank == -1) {
-		printfAndCrash("invalid mode");
-	}
+    int bank = getModeBank(val);
+    if (bank == -1) {
+        printfAndCrash("invalid mode");
+    }
 
-	Mode oldmode = cpsr.mode;
-	int oldbank = getModeBank(oldmode);
+    Mode oldmode = cpsr.mode;
+    int oldbank = getModeBank(oldmode);
 
-	// FIQ mode reg bank switch
-	if (bank == 1 || oldbank == 1) {
-		for (int i = 0; i < 5; i++) {
-			bankedreg[oldbank][i] = reg[8 + i];
-			reg[8 + i] = bankedreg[bank][i];
-		}
-	}
+    // FIQ mode reg bank switch
+    if (bank == 1 || oldbank == 1) {
+        for (int i = 0; i < 5; i++) {
+            bankedreg[oldbank][i] = reg[8 + i];
+            reg[8 + i] = bankedreg[bank][i];
+        }
+    }
 
-	// Regular reg bank switch
-	bankedreg[oldbank][6] = reg[13];
-	bankedreg[oldbank][7] = reg[14];
-	reg[13] = bankedreg[bank][6];
-	reg[14] = bankedreg[bank][7];
+    // Regular reg bank switch
+    bankedreg[oldbank][6] = reg[13];
+    bankedreg[oldbank][7] = reg[14];
+    reg[13] = bankedreg[bank][6];
+    reg[14] = bankedreg[bank][7];
 
 }
 void State::setThumb(bool val) {
-	if (cpsr.t != val) {
-		cpsr.t = val;
-		issuePipelineFlush();
-	}
+    if (cpsr.t != val) {
+        cpsr.t = val;
+        issuePipelineFlush();
+    }
 }
 
 // execution methods
 void State::execute() {
-	evenClock = !evenClock;
-	if (waitstates) {
-		waitstates--;
-		cycles++;
-	}
-	else {
-		// Pipeline refill (can we do the two prefetches immediately without observable effect?)
-		if (pipelineStage != 2) {
-			if (pipelineStage == 0) {
-				if (!cpsr.t) 
-					reg[15] &= 0xffff'fffc;
-				else
-					reg[15] &= 0xffff'fffe;
-				pipelineFetch<0, Access::N>(cpsr.t);
-			}
-			else {
-				pipelineFetch<1, Access::S>(cpsr.t);
-				nextInstructionAccessType = Access::S;
-			}
+    evenClock = !evenClock;
+    if (waitstates) {
+        waitstates--;
+        cycles++;
+    }
+    else {
+        // Pipeline refill (can we do the two prefetches immediately without observable effect?)
+        if (pipelineStage != 2) {
+            if (pipelineStage == 0) {
+                if (!cpsr.t) 
+                    reg[15] &= 0xffff'fffc;
+                else
+                    reg[15] &= 0xffff'fffe;
+                pipelineFetch<0, Access::N>(cpsr.t);
+            }
+            else {
+                pipelineFetch<1, Access::S>(cpsr.t);
+                nextInstructionAccessType = Access::S;
+            }
 
-			pipelineStage++;
-			cycles++;
-		}
-		// Execution starts
-		else if (exeStage == -1) {
-			currentOpcode = pipeline[0];
-			pipeline[0] = pipeline[1];
+            pipelineStage++;
+            cycles++;
+        }
+        // Execution starts
+        else if (exeStage == -1) {
+            currentOpcode = pipeline[0];
+            pipeline[0] = pipeline[1];
 
-			exeStage = 0;
-			if (!cpsr.t) {
-				pipeline[1] = read32(reg[15], nextInstructionAccessType);
-				nextInstructionAccessType = Access::S;
-				Interpreter::ArmInstruction instr = Interpreter::Arm::decode(currentOpcode, type);
-				currentInstructionFun = (void*)instr;
-				instr(this, currentOpcode);
+            exeStage = 0;
+            if (!cpsr.t) {
+                pipeline[1] = readCode32(reg[15], nextInstructionAccessType);
+                nextInstructionAccessType = Access::S;
+                Interpreter::ArmInstruction instr = Interpreter::Arm::decode(currentOpcode, type);
+                currentInstructionFun = (void*)instr;
+                instr(this, currentOpcode);
 
-				if (pipelineStage != 0)
-					reg[15] += 4;
-			}
-			else {
-				pipeline[1] = read16(reg[15], nextInstructionAccessType);
-				nextInstructionAccessType = Access::S;
-				Interpreter::ThumbInstruction instr = Interpreter::Thumb::decode(currentOpcode, type);
-				currentInstructionFun = (void*)instr;
-				instr(this, currentOpcode);
+                if (pipelineStage != 0)
+                    reg[15] += 4;
+            }
+            else {
+                pipeline[1] = readCode16(reg[15], nextInstructionAccessType);
+                nextInstructionAccessType = Access::S;
+                Interpreter::ThumbInstruction instr = Interpreter::Thumb::decode(currentOpcode, type);
+                currentInstructionFun = (void*)instr;
+                instr(this, currentOpcode);
 
-				if (pipelineStage != 0)
-					reg[15] += 2;
-			}
+                if (pipelineStage != 0)
+                    reg[15] += 2;
+            }
 
-			// only handle exceptions when instruction is fully complete
-			if (exeStage == -1)
-				handleExceptions();
-		}
-		// Multicycle execution
-		else {
-			exeStage++;
-			if (!cpsr.t) {
-				Interpreter::ArmInstruction instr = (Interpreter::ArmInstruction)currentInstructionFun;
-				instr(this, currentOpcode);
-			}
-			else {
-				Interpreter::ThumbInstruction instr = (Interpreter::ThumbInstruction)currentInstructionFun;
-				instr(this, currentOpcode);
-			}
+            // only handle exceptions when instruction is fully complete
+            if (exeStage == -1)
+                handleExceptions();
+        }
+        // Multicycle execution
+        else {
+            exeStage++;
+            if (!cpsr.t) {
+                Interpreter::ArmInstruction instr = (Interpreter::ArmInstruction)currentInstructionFun;
+                instr(this, currentOpcode);
+            }
+            else {
+                Interpreter::ThumbInstruction instr = (Interpreter::ThumbInstruction)currentInstructionFun;
+                instr(this, currentOpcode);
+            }
 
-			if (exeStage == -1)
-				handleExceptions();
-		}
-	}
+            if (exeStage == -1)
+                handleExceptions();
+        }
+    }
 
-	// TODO: theres a second execution stage where exceptions are handled
+    // TODO: theres a second execution stage where exceptions are handled
 }
 void State::handleExceptions() {
 
 }
 void State::init() {
-	issuePipelineFlush();
+    issuePipelineFlush();
 }
 void State::finishInstruction() {
-	exeStage = -1;
+    exeStage = -1;
 }
 
 // pipeline methods
 void State::issuePipelineFlush() {
-	if (pipelineStage == 2) {
-		printfAndCrash("pipeline flush issued while the pipeline is refilling. how'd'that happen?");
-	}
+    if (pipelineStage == 2) {
+        printfAndCrash("pipeline flush issued while the pipeline is refilling. how'd'that happen?");
+    }
 
-	pipelineStage = 0;
-	// if (!cpsr.t) {
-	// 	reg[15] &= 0xffff'fffc;
-	// 	pipeline[0] = read32(reg[15], Access::N);
-	// 	pipeline[1] = read32(reg[15 + 4], Access::S);
-	// 	reg[15] += 8;
-	// 	cycles += 2;
-	// }
-	// else {
-	// 	reg[15] &= 0xffff'fffe;
-	// 	pipeline[0] = read16(reg[15], Access::N);
-	// 	pipeline[1] = read16(reg[15 + 2], Access::S);
-	// 	reg[15] += 4;
-	// 	cycles += 2;
-	// }
+    pipelineStage = 0;
+    // if (!cpsr.t) {
+    //  reg[15] &= 0xffff'fffc;
+    //  pipeline[0] = read32(reg[15], Access::N);
+    //  pipeline[1] = read32(reg[15 + 4], Access::S);
+    //  reg[15] += 8;
+    //  cycles += 2;
+    // }
+    // else {
+    //  reg[15] &= 0xffff'fffe;
+    //  pipeline[0] = read16(reg[15], Access::N);
+    //  pipeline[1] = read16(reg[15 + 2], Access::S);
+    //  reg[15] += 4;
+    //  cycles += 2;
+    // }
 }
 
 template <int stage, Access access>
 inline void State::pipelineFetch(bool thumb) {
-	if (!thumb) {
-		pipeline[stage] = read32(reg[15], access);
-		reg[15] += 4;
-	}
-	else {
-		pipeline[stage] = read16(reg[15], access);
-		reg[15] += 2;
-	}
+    if (!thumb) {
+        pipeline[stage] = readCode32(reg[15], access);
+        reg[15] += 4;
+    }
+    else {
+        pipeline[stage] = readCode16(reg[15], access);
+        reg[15] += 2;
+    }
 }
 
 // debug methods
 std::string State::getTypeString() {
-	if (this->type == Type::Arm7)
-		return "ARM7TDMI";
-	else
-		return "ARM946E-S";
+    if (this->type == Type::Arm7)
+        return "ARM7TDMI";
+    else
+        return "ARM946E-S";
 }
 
 }
