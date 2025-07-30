@@ -80,8 +80,9 @@ namespace Arm {
 		inline void write32(u32 addr, u32 val, Access access);
 
 		// waitstate methods
-		template <AccessType type, AccessWidth width>
-		inline void addMainMemoryWaitstates(Access access);
+		template <AccessType type, AccessWidth width> inline void addMainMemoryWaitstates9(Access access);
+		template <AccessType type, AccessWidth width> inline void addSharedMemoryWaitstates9(Access access);
+		template <AccessType type, AccessWidth width> inline void addVRAMWaitstates9(Access access);
 
 		// mode methods
 		void setMode(Mode val);

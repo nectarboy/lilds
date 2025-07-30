@@ -22,7 +22,7 @@ namespace Arm {
 
     // waitstate methods
     template <AccessType type, AccessWidth width>
-    inline void State::addMainMemoryWaitstates(Access access) {
+    inline void State::addMainMemoryWaitstates9(Access access) {
         if constexpr (type == AccessType::Code) {
             if constexpr (width == AccessWidth::Bus16)
                 waitstates += 4 + evenClock;
@@ -36,9 +36,34 @@ namespace Arm {
                 waitstates += access == Access::S ? 2 : 10;
         }
     }
-    template void State::addMainMemoryWaitstates<AccessType::Code, AccessWidth::Bus16>(Access access);
-    template void State::addMainMemoryWaitstates<AccessType::Code, AccessWidth::Bus32>(Access access);
-    template void State::addMainMemoryWaitstates<AccessType::Data, AccessWidth::Bus16>(Access access);
-    template void State::addMainMemoryWaitstates<AccessType::Data, AccessWidth::Bus32>(Access access);
+
+    template <AccessType type, AccessWidth width>
+    inline void State::addSharedMemoryWaitstates9(Access access) {
+        if constexpr (type == AccessType::Code) {
+            if constexpr (width == AccessWidth::Bus16)
+                waitstates += 2;
+            else
+                waitstates += 4;
+        }
+        else {
+            waitstates += access == Access::S ? 1 : 4;
+        }
+    }
+
+    template <AccessType type, AccessWidth width>
+    inline void State::addVRAMWaitstates9(Access access) {
+        if constexpr (type == AccessType::Code) {
+            if constexpr (width == AccessWidth::Bus16)
+                waitstates += 2 + evenClock;
+            else
+                waitstates += 5;
+        }
+        else {
+            if constexpr (width == AccessWidth::Bus16)
+                waitstates += access == Access::S ? 1 : 4;
+            else
+                waitstates += access == Access::S ? 2 : 5;
+        }
+    }
 
 }

@@ -631,12 +631,17 @@ namespace Interpreter {
                     }
                     case 7: { // LDRSH
                         if (cpu->type == Type::Arm7) {
-                            u32 val = cpu->read16(addr, Access::N);
-                            if (addr & 1)
-                                val |= 0xffff'ff00 * ((val >> 7) & 1); // Misaligned (ARM7) LDRSH reads result in a literal LDRSB read instead
-                            else
+                             // Misaligned (ARM7) LDRSH reads result in a literal LDRSB read instead
+                            if (addr & 1) {
+                                u32 val = cpu->read8(addr, Access::N);
+                                val |= 0xffff'ff00 * (val >> 7);
+                                cpu->writeReg(rd, val);
+                            }
+                            else {
+                                u32 val = cpu->read16(addr, Access::N);
                                 val |= 0xffff'0000 * (val >> 15);
-                            cpu->writeReg(rd, val);
+                                cpu->writeReg(rd, val);
+                            }
                         }
                         else {
                             u32 val = cpu->read16(addr & 0xffff'fffe, Access::N);

@@ -15,8 +15,11 @@ namespace DS {
         void* arm9 = nullptr;
         void* bus = nullptr;
 
-        // methods
+        // initialization
         void createComponents();
+
+        // execution
+        void execute();
     };
 
 }

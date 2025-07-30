@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     std::cout << __DATE__ << "\t" << __TIME__ << std::endl;
 
     DS::State lilds;
-	// lilds.arm7->writeReg(0, 0xBADFEEL);
+	static_cast<Arm::State*>(lilds.arm7)->writeReg(0, 420);
 	print(static_cast<Arm::State*>(lilds.arm7)->getTypeString());
 	print(static_cast<Arm::State*>(lilds.arm9)->getTypeString());
 

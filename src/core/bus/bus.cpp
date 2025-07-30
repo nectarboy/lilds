@@ -9,7 +9,7 @@ namespace Bus {
         switch (region) {
             // Main Memory
             case 2: {
-                arm->addMainMemoryWaitstates<accessType, Arm::AccessWidth::Bus16>(access);
+                arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
                 return mainRam[addr & 0x3fffff];
                 break;
             }
