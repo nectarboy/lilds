@@ -38,7 +38,7 @@ namespace Interpreter {
     inline u32 aluBarrelShifter(State* cpu, bool i, bool r, u32 op2, int r15Off, bool affectC);
 
     // mul functions
-    u32 mulGetICycles(u32 op, bool a);
+    inline u32 mulGetICycles(u32 op, bool a);
 
     // arm instructions
     typedef void (*ArmInstruction)(struct State*, u32);
@@ -47,27 +47,31 @@ namespace Interpreter {
         void bl(State* cpu, u32 instruction);
         template <bool thumb> void bx(State* cpu, u32 instruction);
         template <bool thumb> void blx_reg(State* cpu, u32 instruction);
-        template <bool thumb> void swi(State* cpu, u32 instruction);
-        void bkpt(State* cpu, u32 instruction);
-        void alu(State* cpu, u32 instruction);
+        
+        template <bool thumb> void alu(State* cpu, u32 instruction);
         void mul(State* cpu, u32 instruction);
         void mull(State* cpu, u32 instruction);
         void smul(State* cpu, u32 instruction);
         void clz(State* cpu, u32 instruction);
         void qadd(State* cpu, u32 instruction);
         void mrs(State* cpu, u32 instruction);
-        template <bool thumb> void mrs(State* cpu, u32 instruction);
+        template <bool thumb> void msr(State* cpu, u32 instruction);
         void ldr_str(State* cpu, u32 instruction);
         void ldrh_strh(State* cpu, u32 instruction);
-        void ldm_stm(State* cpu, u32 instruction);
+        void swp(State* cpu, u32 instruction);
+        template <bool thumb> void ldm_stm(State* cpu, u32 instruction);
+        void swi(State* cpu, u32 instruction);
+        void bkpt(State* cpu, u32 instruction);
+        void und(State* cpu, u32 instruction);
+        void DEBUG_noop(State* cpu, u32 instruction);
 
-        ArmInstruction decode(u32 instruction, Type type);
+        ArmInstruction decode(State* cpu, u32 instruction);
 
     }
 
     // thumb instructions
     typedef void (*ThumbInstruction)(struct State*, u16);
     namespace Thumb {
-        ThumbInstruction decode(u16 instruction, Type type);
+        ThumbInstruction decode(State* cpu, u16 instruction);
     }
 }

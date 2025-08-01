@@ -1,9 +1,10 @@
 #include "../../../math.h"
 #include "../../../helpers.h"
 #include "../arm.h"
-#include "../memory.h"
+#include "../memory.inl"
 #include "interpreter.h"
-#include "alu.cpp"
+#include "alu.inl"
+#include "mul.inl"
 
 // TODO: templatize all functions checking for arm types later
 
@@ -17,8 +18,8 @@ namespace Interpreter {
             cpu->cycles++;
             if (cpu->exeStage == 0) {
                 CC cc = CC((instruction >> 28) & 0xf);
-                bool isBx = (cpu->type == Type::Arm9) & (cc == CC::UND);
-                if (!isBx && !evalConditionCode(cpu, cc)) {
+                bool isBlx = (cpu->type == Type::Arm9) & (cc == CC::UND);
+                if (!isBlx && !evalConditionCode(cpu, cc)) {
                     cpu->finishInstruction();
                     return;
                 }
@@ -28,9 +29,9 @@ namespace Interpreter {
                 off *= 4;
 
                 bool l = (instruction >> 24) & 1;
-                cpu->cpsr.t = isBx;
-                off += isBx * l * 2;
-                if (l || isBx)
+                cpu->cpsr.t |= isBlx;
+                off += isBlx * l * 2;
+                if (l || isBlx)
                     cpu->reg[14] = cpu->reg[15] - 4;
 
                 cpu->reg[15] += off;
@@ -80,6 +81,8 @@ namespace Interpreter {
                 cpu->finishInstruction();
             }
         }
+        template void bx<false>(State* cpu, u32 instruction);
+        template void bx<true>(State* cpu, u32 instruction);
 
         template <bool thumb>
         void blx_reg(State* cpu, u32 instruction) {
@@ -113,6 +116,8 @@ namespace Interpreter {
                 cpu->finishInstruction();
             }
         }
+        template void blx_reg<false>(State* cpu, u32 instruction);
+        template void blx_reg<true>(State* cpu, u32 instruction);
 
         // alu
         template <bool thumb>
@@ -132,10 +137,11 @@ namespace Interpreter {
                 u32 rd = (instruction >> 12) & 0xf;
 
                 bool rnIsR15 = rn == 15;
-                int r15Off; // fake emulate the memory stage
+
+                // fake emulate the memory stage
+                int r15Off; 
                 if constexpr (thumb)
                     r15Off = 2;
-
                 if (!i && r) {
                     if constexpr (!thumb)
                         r15Off = 4;
@@ -153,50 +159,50 @@ namespace Interpreter {
                     case 0x0: { // AND (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = op1 & op2;
-                        aluSetLogicFlags(cpu, res, rd, res);
+                        aluSetLogicFlags<>(cpu, res, rd, res);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0x1: { // EOR (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = op1 ^ op2;
-                        aluSetLogicFlags(cpu, res, rd, res);
+                        aluSetLogicFlags<>(cpu, res, rd, res);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0x2: { // SUB (arithmetic)
                         op2 = aluBarrelShifter<false>(cpu, i, r, op2, r15Off, false);
-                        u32 res = aluSub(cpu, op1, op2, rd, s);
+                        u32 res = aluSub<>(cpu, op1, op2, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0x3: { // RSB (arithmetic)
                         op2 = aluBarrelShifter<false>(cpu, i, r, op2, r15Off, false);
-                        u32 res = aluSub(cpu, op2, op1, rd, s);
+                        u32 res = aluSub<>(cpu, op2, op1, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0x4: { // ADD (arithmetic)
                         op2 = aluBarrelShifter<false>(cpu, i, r, op2, r15Off, false);
-                        u32 res = aluAdd(cpu, op1, op2, rd, s);
+                        u32 res = aluAdd<>(cpu, op1, op2, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0x5: { // ADC (arithmetic)
                         op2 = aluBarrelShifter<false>(cpu, i, r, op2, r15Off, false);
-                        u32 res = aluAddCarry(cpu, op1, op2, rd, s);
+                        u32 res = aluAddCarry<>(cpu, op1, op2, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0x6: { // SBC (arithmetic)
                         op2 = aluBarrelShifter<false>(cpu, i, r, op2, r15Off, false);
-                        u32 res = aluSubCarry(cpu, op1, op2, rd, s);
+                        u32 res = aluSubCarry<>(cpu, op1, op2, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0x7: { // RSC (arithmetic)
                         op2 = aluBarrelShifter<false>(cpu, i, r, op2, r15Off, false);
-                        u32 res = aluSubCarry(cpu, op2, op1, rd, s);
+                        u32 res = aluSubCarry<>(cpu, op2, op1, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }
@@ -225,27 +231,27 @@ namespace Interpreter {
                     case 0xC: { // ORR (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = op1 | op2;
-                        aluSetLogicFlags(cpu, res, rd, res);
+                        aluSetLogicFlags<>(cpu, res, rd, res);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0xD: { // MOV (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
-                        aluSetLogicFlags(cpu, op2, rd, res);
+                        aluSetLogicFlags<>(cpu, op2, rd, op2);
                         cpu->reg[rd] = op2;
                         break;
                     }
                     case 0xE: { // BIC (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = op1 & (~op2);
-                        aluSetLogicFlags(cpu, res, rd, res);
+                        aluSetLogicFlags<>(cpu, res, rd, res);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0xF: { // MVN (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = ~op2;
-                        aluSetLogicFlags(cpu, res, rd, res);
+                        aluSetLogicFlags<>(cpu, res, rd, res);
                         cpu->reg[rd] = res;
                         break;
                     }
@@ -256,6 +262,8 @@ namespace Interpreter {
                 cpu->finishInstruction();
             }
         }
+        template void alu<false>(State* cpu, u32 instruction);
+        template void alu<true>(State* cpu, u32 instruction);
 
         // mul
         void mul(State* cpu, u32 instruction) {
@@ -498,7 +506,7 @@ namespace Interpreter {
             cpu->writeReg(rd, (bank == 0) ? cpu->readCPSR() : cpu->spsr[bank]);
         }
 
-        template <bool thumbExe>
+        template <bool thumb>
         void msr(State* cpu, u32 instruction) {
             cpu->cycles++;
             cpu->finishInstruction();
@@ -514,7 +522,7 @@ namespace Interpreter {
             u32 writeMask = c*0x1f + f*(cpu->type == Type::Arm9 ? 0xf800'0000 : 0xf000'0000);
 
             u32 op = instruction & 0xfff;
-            u32 r15Off = constexpr thumbExe ? 4 : 8; // TODO: not right?
+            constexpr u32 r15Off = thumb ? 2 : 4; // TODO: not right?
             op = aluBarrelShifter<false>(cpu, i, false, op, r15Off, false); // TODO: can be optimized to not check for (not possible) register shift (I=0, R=1)
 
             if (toSpsr) {
@@ -526,6 +534,8 @@ namespace Interpreter {
                 cpu->writeCPSR((cpu->readCPSR() & ~writeMask) | (op & writeMask)); // can be optimized to remove a few arm type (inlined?)
             }
         }
+        template void msr<false>(State* cpu, u32 instruction);
+        template void msr<true>(State* cpu, u32 instruction);
 
         void ldr_str(State* cpu, u32 instruction) {
             cpu->cycles++;
@@ -691,7 +701,7 @@ namespace Interpreter {
                     }
                     default:
                         printf("Oooooooooooops! We decoded a LDRH_STRH instead of SWP!");
-                        // __unreachable();
+                        // lilds__unreachable();
                         break;
                 }
 
@@ -703,6 +713,37 @@ namespace Interpreter {
             else {
                 cpu->finishInstruction(); // Load I cycle
             }
+        }
+
+        void swp(State* cpu, u32 instruction) {
+            cpu->cycles++;
+            cpu->finishInstruction();
+        }
+
+        template <bool thumb>
+        void ldm_stm(State* cpu, u32 instruction) {
+            cpu->cycles++;
+            cpu->finishInstruction();
+        }
+        template void ldm_stm<false>(State* cpu, u32 instruction);
+        template void ldm_stm<true>(State* cpu, u32 instruction);
+
+        void swi(State* cpu, u32 instruction) {
+            cpu->cycles++;
+            cpu->finishInstruction();
+        }
+
+        void und(State* cpu, u32 instruction) {
+            cpu->cycles++;
+            cpu->finishInstruction();
+
+            std::cout << "undefined reached at pc: " << std::hex << cpu->reg[15] << std::dec << "\n";
+            cpu->PRINTSTATE();
+        }
+
+        void DEBUG_noop(State* cpu, u32 instruction) {
+            cpu->cycles++;
+            cpu->finishInstruction();
         }
 
     }

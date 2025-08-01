@@ -17,6 +17,7 @@ namespace DS {
 
         // initialization
         void createComponents();
+        void loadRomFileIntoMainMem(std::vector<char>& romFile);
 
         // execution
         void execute();

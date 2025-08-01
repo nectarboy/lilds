@@ -19,11 +19,17 @@ int main(int argc, char* argv[]) {
     std::cout << __DATE__ << "\t" << __TIME__ << std::endl;
 
     DS::State lilds;
-    static_cast<Arm::State*>(lilds.arm7)->writeReg(0, 420);
-    print(static_cast<Arm::State*>(lilds.arm7)->getTypeString());
-    print(static_cast<Arm::State*>(lilds.arm9)->getTypeString());
-
     std::cout << "Hello!" << std::endl;
+
+    if (argc < 2) {
+        std::cout << "Please input a rom." << std::endl;
+        return 0;
+    }
+
+    // Load rom
+    std::cout << "Rom path: " << argv[1] << std::endl;
+    std::vector<char> romFile = getFileBinaryVector((std::string)argv[1]);
+    lilds.loadRomFileIntoMainMem(romFile);
 
     return 0;
 }

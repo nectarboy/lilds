@@ -2,7 +2,7 @@
 //#include "src/math.h"
 
 #include "arm.h"
-#include "memory.h"
+#include "memory.inl"
 #include "interpreter/interpreter.h"
 #include "../bus/bus.h"
 
@@ -138,7 +138,7 @@ void State::execute() {
                     pipeline[1] = readCode32(reg[15], nextInstructionAccessType);
                     nextInstructionAccessType = Access::S;
 
-                    Interpreter::ArmInstruction instr = Interpreter::Arm::decode(currentInstruction, type);
+                    Interpreter::ArmInstruction instr = Interpreter::Arm::decode(this, currentInstruction);
                     currentInstructionFun = (void*)instr;
                     instr(this, currentInstruction);
 
@@ -149,7 +149,7 @@ void State::execute() {
                     pipeline[1] = readCode16(reg[15], nextInstructionAccessType);
                     nextInstructionAccessType = Access::S;
 
-                    Interpreter::ThumbInstruction instr = Interpreter::Thumb::decode(currentInstruction, type);
+                    Interpreter::ThumbInstruction instr = Interpreter::Thumb::decode(this, currentInstruction);
                     currentInstructionFun = (void*)instr;
                     instr(this, currentInstruction);
 

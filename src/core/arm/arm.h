@@ -115,6 +115,8 @@ namespace Arm {
 
         // debug methods
         std::string getTypeString();
+        constexpr inline bool canPrint() {return false;}
+        void PRINTSTATE() {}
 
         // static stuff
         static inline int getModeBank(Mode mode) {

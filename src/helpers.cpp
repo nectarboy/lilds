@@ -1,7 +1,7 @@
 #include "helpers.h"
 
-std::vector<char> getFileBinaryVector(std::string fileName) {
-	std::ifstream file(fileName, std::ios::binary | std::ios::ate);
+std::vector<char> getFileBinaryVector(std::string filePath) {
+	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
 		printAndCrash("File not found... Exiting.");
 	}

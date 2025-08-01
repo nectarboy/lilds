@@ -17,12 +17,11 @@ set(SOURCES
     # Core
     src/core/ds.cpp
     src/core/arm/interpreter/arm32.cpp
-    src/core/arm/interpreter/alu.cpp
-    src/core/arm/interpreter/mul.cpp
     src/core/arm/interpreter/condition_codes.cpp
     src/core/arm/interpreter/decode.cpp
     src/core/arm/arm.cpp
     src/core/bus/bus.cpp
+    src/core/bus/load_rom.cpp
 )
 
 # Create the executable

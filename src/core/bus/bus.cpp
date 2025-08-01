@@ -1,27 +1,10 @@
 #include "bus.h"
-#include "../arm/memory.h"
+#include "../arm/memory.inl"
 
 namespace Bus {
     using namespace std;
 
-    template <Arm::AccessType accessType>
-    u8 State::arm9Read8(Arm::State* arm, u32 addr, Arm::Access access) {
-        int region = addr >> 24;
-        switch (region) {
-            // Main Memory
-            case 2: {
-                arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
-                return mainRam[addr & 0x3fffff];
-                break;
-            }
-            default:
-                return 0;
-        }
-    }
-    template u8 State::arm9Read8<Arm::AccessType::Code>(Arm::State*, u32 addr, Arm::Access access);
-    template u8 State::arm9Read8<Arm::AccessType::Data>(Arm::State*, u32 addr, Arm::Access access);
-
-    template <typename T, Arm::AccessType accessType>
+    template <typename T, Arm::AccessType accessType, bool silent = false>
     T State::arm9Read(Arm::State* arm, u32 addr, Arm::Access access) {
         if constexpr (is_same_v<T, u32>)
             addr &= 0xffff'fffc;
@@ -32,18 +15,20 @@ namespace Bus {
         switch (region) {
             // Main Memory
             case 2: {
-                if constexpr (is_same_v<T, u32>)
-                    arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus32>(access);
-                else
-                    arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
+                if constexpr (!silent) {
+                    if constexpr (is_same_v<T, u32>)
+                        arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus32>(access);
+                    else
+                        arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
+                }
 
                 addr &= 0x3fffff;
                 if constexpr (is_same_v<T, u8>)
-                    return mainRam[addr];
+                    return read8(mainRam, addr);
                 else if constexpr (is_same_v<T, u16>)
-                    return mainRam[addr] | (mainRam[addr+1] << 8);
+                    return read16(mainRam, addr);
                 else
-                    return mainRam[addr] | (mainRam[addr+1] << 8) | (mainRam[addr+2] << 16) | (mainRam[addr+3] << 24);
+                    return read32(mainRam, addr);
                 break;
             }
             default:
@@ -57,7 +42,7 @@ namespace Bus {
     template u32 State::arm9Read<u32, Arm::AccessType::Code>(Arm::State*, u32 addr, Arm::Access access);
     template u32 State::arm9Read<u32, Arm::AccessType::Data>(Arm::State*, u32 addr, Arm::Access access);
 
-    template <typename T, Arm::AccessType accessType>
+    template <typename T, Arm::AccessType accessType, bool silent = false>
     void State::arm9Write(Arm::State* arm, u32 addr, T val, Arm::Access access) {
         if constexpr (is_same_v<T, u32>)
             addr &= 0xffff'fffc;
@@ -68,22 +53,20 @@ namespace Bus {
         switch (region) {
             // Main Memory
             case 2: {
-                if constexpr (is_same_v<T, u32>)
-                    arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus32>(access);
-                else
-                    arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
+                if constexpr (!silent) {
+                    if constexpr (is_same_v<T, u32>)
+                        arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus32>(access);
+                    else
+                        arm->addMainMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
+                }
 
                 addr &= 0x3fffff;
-                if constexpr (is_same_v<T, u8>) {
-                    mainRam[addr] = (u8)(val);
-                }
-                if constexpr (is_same_v<T, u16>) {
-                    mainRam[addr+1] = (u8)(val >> 8);
-                }
-                if constexpr (is_same_v<T, u32>) {
-                    mainRam[addr+2] = (u8)(val >> 16);
-                    mainRam[addr+3] = (u8)(val >> 24);
-                }
+                if constexpr (is_same_v<T, u8>)
+                    write8(mainRam, addr, val);
+                else if constexpr (is_same_v<T, u16>)
+                    write16(mainRam, addr, val);
+                else
+                    write32(mainRam, addr, val);
                 break;
             }
             default:
