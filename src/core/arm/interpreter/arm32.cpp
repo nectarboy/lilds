@@ -159,14 +159,14 @@ namespace Interpreter {
                     case 0x0: { // AND (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = op1 & op2;
-                        aluSetLogicFlags<>(cpu, res, rd, res);
+                        aluSetLogicFlags<>(cpu, res, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0x1: { // EOR (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = op1 ^ op2;
-                        aluSetLogicFlags<>(cpu, res, rd, res);
+                        aluSetLogicFlags<>(cpu, res, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }
@@ -174,6 +174,7 @@ namespace Interpreter {
                         op2 = aluBarrelShifter<false>(cpu, i, r, op2, r15Off, false);
                         u32 res = aluSub<>(cpu, op1, op2, rd, s);
                         cpu->reg[rd] = res;
+                        // printf("Sub res: %x \n", res);
                         break;
                     }
                     case 0x3: { // RSB (arithmetic)
@@ -209,13 +210,13 @@ namespace Interpreter {
                     case 0x8: { // TST (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = op1 & op2;
-                        aluSetLogicFlags<true>(cpu, res, rd, res);
+                        aluSetLogicFlags<true>(cpu, res, rd, s);
                         break;
                     }
                     case 0x9: { // TEQ (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = op1 ^ op2;
-                        aluSetLogicFlags<true>(cpu, res, rd, res);
+                        aluSetLogicFlags<true>(cpu, res, rd, s);
                         break;
                     }
                     case 0xA: { // CMP (arithmetic)
@@ -231,27 +232,27 @@ namespace Interpreter {
                     case 0xC: { // ORR (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = op1 | op2;
-                        aluSetLogicFlags<>(cpu, res, rd, res);
+                        aluSetLogicFlags<>(cpu, res, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0xD: { // MOV (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
-                        aluSetLogicFlags<>(cpu, op2, rd, op2);
+                        aluSetLogicFlags<>(cpu, op2, rd, s);
                         cpu->reg[rd] = op2;
                         break;
                     }
                     case 0xE: { // BIC (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = op1 & (~op2);
-                        aluSetLogicFlags<>(cpu, res, rd, res);
+                        aluSetLogicFlags<>(cpu, res, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }
                     case 0xF: { // MVN (logical)
                         op2 = aluBarrelShifter<true>(cpu, i, r, op2, r15Off, s);
                         u32 res = ~op2;
-                        aluSetLogicFlags<>(cpu, res, rd, res);
+                        aluSetLogicFlags<>(cpu, res, rd, s);
                         cpu->reg[rd] = res;
                         break;
                     }

@@ -1,4 +1,5 @@
 #include "bus.h"
+#include "io.h"
 #include "../arm/waitstates.inl"
 
 namespace Bus {
@@ -30,6 +31,26 @@ namespace Bus {
                     return read16(mainRam, addr);
                 else
                     return read32(mainRam, addr);
+                break;
+            }
+            // IO9
+            case 4: {
+                if constexpr (!silent) {
+                    if constexpr (is_same_v<T, u32>)
+                        arm->addSharedMemoryWaitstates9<accessType, Arm::AccessWidth::Bus32>(access);
+                    else
+                        arm->addSharedMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
+                }
+
+                T val = io.arm9Read8(addr);
+                if constexpr (is_same_v<T, u16>) {
+                    val |= io.arm9Read8(addr + 1) << 8;
+                }
+                if constexpr (is_same_v<T, u32>) {
+                    val |= io.arm9Read8(addr + 2) << 16;
+                    val |= io.arm9Read8(addr + 3) << 24;
+                }
+                return val;
                 break;
             }
             default:
@@ -65,8 +86,27 @@ namespace Bus {
                     write32(mainRam, addr, val);
                 break;
             }
+            // IO9
+            case 4: {
+                if constexpr (!silent) {
+                    if constexpr (is_same_v<T, u32>)
+                        arm->addSharedMemoryWaitstates9<accessType, Arm::AccessWidth::Bus32>(access);
+                    else
+                        arm->addSharedMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
+                }
+
+                io.arm9Write8(addr, (u8)(val));
+                if constexpr (is_same_v<T, u16>) {
+                    io.arm9Write8(addr + 1, (u8)(val >> 8));
+                }
+                if constexpr (is_same_v<T, u32>) {
+                    io.arm9Write8(addr + 2, (u8)(val >> 16));
+                    io.arm9Write8(addr + 3, (u8)(val >> 24));
+                }
+                break;
+            }
             default:
-                printf("Arm9 writes %x <- %x \n", addr, val);
+                // printf("Arm9 writes %x <- %x \n", addr, val);
                 break;
         }
     }

@@ -127,6 +127,11 @@ void State::setThumb(bool t) {
     if (cpsr.t != t) {
         cpsr.t = t;
         issuePipelineFlush();
+
+        if (t) {
+            printf("%s switched to thumb", getTypeString().c_str());
+            lilds__crash();
+        }
     }
 }
 
@@ -274,6 +279,7 @@ std::string State::getTypeString() {
         return "Arm9"; // "ARM946E-S"
 }
 bool State::canPrint() {
+    // return false;
     return type == Type::Arm9;
 }
 

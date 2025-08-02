@@ -1,6 +1,7 @@
 #pragma once
 #include "../../helpers.h"
 #include "../arm/arm.h"
+#include "io.h"
 
 namespace DS {
     struct State;
@@ -37,6 +38,8 @@ namespace Bus {
 
         // references
         DS::State* ds = nullptr;
+
+        IO io;
 
         // memory regions
         u8 instTcm[0x8000];

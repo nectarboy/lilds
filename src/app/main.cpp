@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     lilds.loadRomFileIntoMainMem(romFile);
 
     printf("Start execution\n\n");
-    for (int i = 0; i < 1000000; i++) {
+    for (int i = 0; ; i++) {
         lilds.execute();
     }
 
