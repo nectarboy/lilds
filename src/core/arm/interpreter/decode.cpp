@@ -76,7 +76,6 @@ namespace Interpreter {
                     }
                     else {
                         if (cpu->canPrint()) printf("Ldm_stm at %X: %X \n", cpu->reg[15]-8, instruction);
-                        cpu->PRINTSTATE();
                         return &ldm_stm<false>;
                     }
                     break;

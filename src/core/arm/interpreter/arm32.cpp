@@ -715,12 +715,93 @@ namespace Interpreter {
             }
         }
 
-        
-
+        // TODO: an accurate LDM STM
         template <bool thumb>
         void ldm_stm(State* cpu, u32 instruction) {
             cpu->cycles++;
             cpu->finishInstruction();
+
+            if (!evalConditionCode(cpu, CC((instruction >> 28) & 0xf)))
+                return;
+            bool p = (instruction >> 24) & 1;
+            bool u = (instruction >> 23) & 1;
+            bool s = (instruction >> 22) & 1;
+            bool w = (instruction >> 21) & 1;
+            bool l = (instruction >> 20) & 1;
+            u32 rn = (instruction >> 16) & 0xf;
+            u32 rlist = (instruction >> 0) & 0xffff;
+            u32 rcount = 0;
+
+            // Empty rlist
+            if (rlist == 0) {
+                if (cpu->type == Type::Arm7)
+                    rlist = 0x8000;     // "Empty Rlist: R15 loaded/stored (ARMv4 only),
+                rcount = 16;            //  and Rb=Rb+/-40h (ARMv4-v5)."
+            }
+            // Normal rlist
+            else {
+                for (int i = 0; i < 16; i++) {
+                    // Use the commented method if firstreg is ever used
+                    //if ((rlist >> i) & 1) {
+                    //  if (rcount++ == 0)
+                    //      firstreg = i;
+                    //}
+                    rcount += (rlist >> i) & 1;
+                }
+                // rcount = std::popcount(rlist);
+            }
+
+            bool rnInRlist = (rlist >> rn) & 1;
+
+            // LDM with r15 and S set
+            if (s && l && (rlist >> 15)) {
+                cpu->copySPSRToCPSR();
+                s = false;
+            }
+
+            u32 addr = cpu->reg[rn]; // TODO: what if rn=15
+            u32 oldaddr = addr;
+            // LDM (rn in rlist) Writeback / LDM/STM Normal Writeback
+            // "Writeback with Rb included in Rlist: Store OLD base if Rb is FIRST entry in Rlist, otherwise store NEW base (STM/ARMv4), always store OLD base (STM/ARMv5), no writeback (LDM/ARMv4), writeback if Rb is "the ONLY register, or NOT the LAST register" in Rlist (LDM/ARMv5)."
+            bool earlyWriteback = (l || !rnInRlist);
+            if (w && earlyWriteback) {
+                cpu->writeReg(rn, u ? addr + rcount * 4 : addr - rcount * 4);
+            }
+            // Descending order (not really)
+            if (!u) {
+                addr -= rcount * 4;
+                p = !p;
+            }
+
+            if (cpu->canPrint()) std::cout << "block addr:\t" << std::hex << addr << std::dec << "\n";
+
+            // Traansfer
+            for (int i = 0; i < 16; i++) {
+                if (((rlist >> i) & 1) == 0)
+                    continue;
+
+                addr += 4 * p;
+                if (l) {
+                    if (s)
+                        cpu->writeUserBankReg(i, cpu->read32(addr & 0xffff'fffc, Access::S));
+                    else
+                        cpu->writeReg(i, cpu->read32(addr & 0xffff'fffc, Access::S));
+                }
+                else {
+                    if (s)
+                        cpu->write32(addr & 0xffff'fffc, cpu->readUserBankReg(i), Access::S);
+                    else
+                        cpu->write32(addr & 0xffff'fffc, cpu->reg[i], Access::S);
+                }
+                addr += 4 * (!p);
+
+                // STM (rn in rlist) Writeback
+                // TODO: can easily optimize this by having this check only happen in the first loop
+                if (w && !earlyWriteback) {
+                    cpu->writeReg(rn, u ? oldaddr + rcount * 4 : oldaddr - rcount * 4);
+                    w = false;
+                }
+            }
         }
         template void ldm_stm<false>(State* cpu, u32 instruction);
         template void ldm_stm<true>(State* cpu, u32 instruction);

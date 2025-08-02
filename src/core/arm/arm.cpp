@@ -19,6 +19,35 @@ void State::writeReg(int r, u32 val) {
     }
 }
 
+u32 State::readUserBankReg(int r) {
+    if (cpsr.mode == Mode::FIQ) {
+        if (r >= 8 && r <= 14)
+            return bankedreg[0][r - 8];
+        else
+            return reg[r];
+    }
+    else {
+        if (r >= 13 && r <= 14)
+            return bankedreg[0][r - 8];
+        else
+            return reg[r];
+    }
+}
+void State::writeUserBankReg(int r, u32 val) {
+    if (cpsr.mode == Mode::FIQ) {
+        if (r >= 8 && r <= 14)
+            bankedreg[0][r - 8] = val;
+        else
+            writeReg(r, val);
+    }
+    else {
+        if (r >= 13 && r <= 14)
+            bankedreg[0][r - 8] = val;
+        else
+            writeReg(r, val);
+    }
+}
+
 u32 State::readCPSR() {
     u32 val = (int)(cpsr.mode) | (cpsr.t << 5) | (cpsr.f << 6) | (cpsr.i << 7) | (cpsr.v << 28) | (cpsr.c << 29) | (cpsr.z << 30) | (cpsr.n << 31);
     if (type == Type::Arm9) {
@@ -245,7 +274,7 @@ std::string State::getTypeString() {
         return "Arm9"; // "ARM946E-S"
 }
 bool State::canPrint() {
-    return type == Type::Arm7;
+    return type == Type::Arm9;
 }
 
 }

@@ -39,6 +39,8 @@ namespace Bus {
         DS::State* ds = nullptr;
 
         // memory regions
+        u8 instTcm[0x8000];
+        u8 dataTcm[0x4000];
         u8 mainRam[0x400000];
         u8 sharedRam[98304];
         u8 vram[671744];

@@ -33,7 +33,7 @@ namespace Bus {
                 break;
             }
             default:
-                printf("Arm9 read from region %d \n", region);
+                printf("Arm9 reads %x \n", addr);
                 return 0;
         }
     }
@@ -66,7 +66,7 @@ namespace Bus {
                 break;
             }
             default:
-                printf("Arm9 write to region %d \n", region);
+                printf("Arm9 writes %x <- %x \n", addr, val);
                 break;
         }
     }
@@ -102,7 +102,7 @@ namespace Bus {
                 break;
             }
             default:
-                printf("Arm7 read from region %d \n", region);
+                printf("Arm7 reads %x \n", addr);
                 return 0;
         }
     }
@@ -135,7 +135,7 @@ namespace Bus {
                 break;
             }
             default:
-                printf("Arm7 write to region %d \n", region);
+                printf("Arm7 writes %x <- %x \n", addr, val);
                 break;
         }
     }

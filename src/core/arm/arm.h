@@ -72,6 +72,8 @@ namespace Arm {
         // register methods
         u32 readReg(int r);
         void writeReg(int r, u32 val);
+        u32 readUserBankReg(int r);
+        void writeUserBankReg(int r, u32 val);
 
         u32 readCPSR();
         void writeCPSR(u32 val);
