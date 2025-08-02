@@ -58,10 +58,13 @@ namespace Interpreter {
         template <bool thumb> void msr(State* cpu, u32 instruction);
         void ldr_str(State* cpu, u32 instruction);
         void ldrh_strh(State* cpu, u32 instruction);
-        void swp(State* cpu, u32 instruction);
         template <bool thumb> void ldm_stm(State* cpu, u32 instruction);
+        void swp(State* cpu, u32 instruction);
         void swi(State* cpu, u32 instruction);
         void bkpt(State* cpu, u32 instruction);
+        void mcr_mrc(State* cpu, u32 instruction);
+        void ldc_stc(State* cpu, u32 instruction);
+        void mcrr_mrrc(State* cpu, u32 instruction);
         void und(State* cpu, u32 instruction);
         void DEBUG_noop(State* cpu, u32 instruction);
 

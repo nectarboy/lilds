@@ -29,11 +29,24 @@ namespace DS {
         printf("Created DS Components\n");
     }
 
+    void State::initialize() {
+        Arm::State* _arm7 = static_cast<Arm::State*>(arm7);
+        Arm::State* _arm9 = static_cast<Arm::State*>(arm9);
+        Bus::State* _bus = static_cast<Bus::State*>(bus);
+
+        _arm7->initialize();
+        _arm9->initialize();
+        _bus->initialize();
+    }
+
+    // loading methods
     void State::loadRomFileIntoMainMem(std::vector<char>& romFile) {
+        Arm::State* _arm7 = static_cast<Arm::State*>(arm7);
+        Arm::State* _arm9 = static_cast<Arm::State*>(arm9);
         Bus::State* _bus = static_cast<Bus::State*>(bus);
 
         _bus->loadRomFile(romFile);
-        _bus->sideLoadRomToMainMem();
+        _bus->sideLoadRomToMainMem(_arm7, _arm9);
     }
 
     // execution methods
@@ -41,7 +54,7 @@ namespace DS {
         Arm::State* _arm7 = static_cast<Arm::State*>(arm7);
         Arm::State* _arm9 = static_cast<Arm::State*>(arm9);
 
-        _arm7->execute();
+        // _arm7->execute();
         _arm9->execute();
         _arm9->execute();
     }

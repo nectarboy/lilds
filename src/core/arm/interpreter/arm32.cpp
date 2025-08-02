@@ -715,10 +715,7 @@ namespace Interpreter {
             }
         }
 
-        void swp(State* cpu, u32 instruction) {
-            cpu->cycles++;
-            cpu->finishInstruction();
-        }
+        
 
         template <bool thumb>
         void ldm_stm(State* cpu, u32 instruction) {
@@ -727,6 +724,48 @@ namespace Interpreter {
         }
         template void ldm_stm<false>(State* cpu, u32 instruction);
         template void ldm_stm<true>(State* cpu, u32 instruction);
+
+        void swp(State* cpu, u32 instruction) {
+            cpu->cycles++;
+            if (cpu->exeStage == 0) {
+                if (!evalConditionCode(cpu, CC((instruction >> 28) & 0xf))) {
+                    cpu->finishInstruction();
+                    return;
+                }
+            }
+            else if (cpu->exeStage == 1) {
+                bool b = (instruction >> 22) & 1;
+                u32 rn = (instruction >> 16) & 0xf;
+
+                u32 addr = cpu->reg[rn];
+                u32 data;
+                if (b)
+                    data = cpu->read8(addr, Access::N);
+                else
+                    data = cpu->read32(addr, Access::N);
+
+                cpu->tmp[0] = data;
+            }
+            else if (cpu->exeStage == 2) {
+                u32 data = cpu->tmp[0];
+
+                bool b = (instruction >> 22) & 1;
+                u32 rn = (instruction >> 16) & 0xf;
+                u32 rd = (instruction >> 12) & 0xf;
+                u32 rm = (instruction >> 0) & 0xf;
+
+                u32 addr = cpu->reg[rn];
+                if (b)
+                    cpu->write8(addr, cpu->reg[rm], Access::N);
+                else
+                    cpu->write32(addr, cpu->reg[rm], Access::N);
+
+                cpu->writeReg(rd, data);
+            } 
+            else {
+                cpu->finishInstruction(); // Final I cycle
+            }
+        }
 
         void swi(State* cpu, u32 instruction) {
             cpu->cycles++;

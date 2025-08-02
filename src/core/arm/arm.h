@@ -51,7 +51,7 @@ namespace Arm {
 
     namespace {
         struct CPSR {
-            Mode mode = (Mode)0;
+            Mode mode = Mode::User;
             bool t = false;
             bool f = false;
             bool i = false;
@@ -113,10 +113,17 @@ namespace Arm {
         template <int stage, Access access>
         inline void pipelineFetch(bool thumb);
 
+        // initialization methods
+        void initialize();
+        void sideLoadAt(u32 addr);
+
         // debug methods
         std::string getTypeString();
-        constexpr inline bool canPrint() {return false;}
-        void PRINTSTATE() {}
+        bool canPrint();
+        void PRINTSTATE() {
+            printf("PRINTSTATE called\n");
+            lilds__crash();
+        }
 
         // static stuff
         static inline int getModeBank(Mode mode) {

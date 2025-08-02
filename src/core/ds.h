@@ -8,6 +8,7 @@ namespace DS {
     struct State {
         State() {
             createComponents();
+            initialize();
         }
 
         // references
@@ -15,11 +16,14 @@ namespace DS {
         void* arm9 = nullptr;
         void* bus = nullptr;
 
-        // initialization
+        // initialization methods
         void createComponents();
+        void initialize();
+
+        // loading methods
         void loadRomFileIntoMainMem(std::vector<char>& romFile);
 
-        // execution
+        // execution methods
         void execute();
     };
 

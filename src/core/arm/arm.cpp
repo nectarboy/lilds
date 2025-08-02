@@ -67,14 +67,17 @@ void State::copySPSRToCPSR() {
 }
 
 // mode methods
-void State::setMode(Mode val) {
-    int bank = getModeBank(val);
+void State::setMode(Mode mode) {
+    int bank = getModeBank(mode);
     if (bank == -1) {
-        printfAndCrash("invalid mode");
+        printf("invalid mode (%x) \n", mode);
+        lilds__crash();
     }
 
     Mode oldmode = cpsr.mode;
     int oldbank = getModeBank(oldmode);
+
+    cpsr.mode = mode;
 
     // FIQ mode reg bank switch
     if (bank == 1 || oldbank == 1) {
@@ -101,6 +104,9 @@ void State::setThumb(bool t) {
 // execution methods
 void State::execute() {
     evenClock = !evenClock;
+
+    // TODO: (Arm9) implement seperate data fetch and code fetch waitstates.
+    // Specifically, code fetch waitstates stall the pipeline, while data fetch waitstates don't, due to seperate code and data paths.
     if (waitstates) {
         waitstates--;
         cycles++;
@@ -186,9 +192,10 @@ void State::finishInstruction() {
 
 // pipeline methods
 void State::issuePipelineFlush() {
-    if (pipelineStage == 2) {
-        printfAndCrash("pipeline flush issued while the pipeline is refilling. how'd'that happen?");
-    }
+    // if (pipelineStage != 2) {
+    //     printf("pipeline flush issued while the pipeline is refilling. how'd'that happen?\n");
+    //     lilds__crash();
+    // }
 
     pipelineStage = 0;
     // if (!cpsr.t) {
@@ -219,12 +226,26 @@ inline void State::pipelineFetch(bool thumb) {
     }
 }
 
+// initialization methods
+void State::initialize() {
+    cpsr.t = false;
+    cpsr.mode = Mode::User;
+    setMode(Mode::User);
+}
+void State::sideLoadAt(u32 addr) {
+    initialize();
+    writeReg(15, addr);
+}
+
 // debug methods
 std::string State::getTypeString() {
     if (this->type == Type::Arm7)
-        return "ARM7TDMI";
+        return "Arm7"; // "ARM7TDMI"
     else
-        return "ARM946E-S";
+        return "Arm9"; // "ARM946E-S"
+}
+bool State::canPrint() {
+    return type == Type::Arm7;
 }
 
 }

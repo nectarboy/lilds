@@ -24,5 +24,9 @@ set(SOURCES
     src/core/bus/load_rom.cpp
 )
 
+# Address Sanitizer
+# add_compile_options(-fsanitize=address)
+# add_link_options(-fsanitize=address)
+
 # Create the executable
 add_executable(lilds ${SOURCES})

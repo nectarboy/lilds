@@ -31,5 +31,9 @@ int main(int argc, char* argv[]) {
     std::vector<char> romFile = getFileBinaryVector((std::string)argv[1]);
     lilds.loadRomFileIntoMainMem(romFile);
 
+    for (int i = 0; i < 1000000; i++) {
+        lilds.execute();
+    }
+
     return 0;
 }
