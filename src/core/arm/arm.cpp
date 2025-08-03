@@ -263,8 +263,8 @@ inline void State::pipelineFetch(bool thumb) {
 // initialization methods
 void State::initialize() {
     cpsr.t = false;
-    cpsr.mode = Mode::User;
-    setMode(Mode::User);
+    cpsr.mode = Mode::System;
+    setMode(Mode::System);
 }
 void State::sideLoadAt(u32 addr) {
     initialize();
@@ -279,7 +279,7 @@ std::string State::getTypeString() {
         return "Arm9"; // "ARM946E-S"
 }
 bool State::canPrint() {
-    // return false;
+    return false;
     return type == Type::Arm9;
 }
 

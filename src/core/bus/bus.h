@@ -1,7 +1,7 @@
 #pragma once
 #include "../../helpers.h"
 #include "../arm/arm.h"
-#include "io.h"
+#include "vram_banks.h"
 
 namespace DS {
     struct State;
@@ -39,29 +39,19 @@ namespace Bus {
         // references
         DS::State* ds = nullptr;
 
-        IO io;
-
         // memory regions
         u8 instTcm[0x8000];
         u8 dataTcm[0x4000];
         u8 mainRam[0x400000];
-        u8 sharedRam[98304];
-        u8 vram[671744];
+        u8 sharedRam[0x18000];
+        u8 vram[0xA4000];
         u8* rom = new u8[0];
         u64 romSize = 0;
 
         // initialization methods
         void initialize();
-
-        // memory methods (TODO: 16 and 32 bit reads that dont call 8 reads, is possible probably)
-        u8 arm7Read8(Arm::State* arm, u32 addr, Arm::Access access);
-        void arm7Write8(Arm::State* arm, u32 addr, u32 val, Arm::Access access);
-
-        template <Arm::AccessType accessType>
-        u8 arm9Read8(Arm::State* arm, u32 addr, Arm::Access access);
-        void arm9Write8(Arm::State* arm, u32 addr, u32 val, Arm::Access access);
-        
-
+            
+        // read/write methods
         template <typename T, Arm::AccessType accessType, bool silent = false>
         inline T arm9Read(Arm::State* arm, u32 addr, Arm::Access access);
         template <typename T, Arm::AccessType accessType, bool silent = false>
@@ -72,9 +62,25 @@ namespace Bus {
         template <typename T, Arm::AccessType accessType, bool silent = false>
         inline void arm7Write(Arm::State* arm, u32 addr, T val, Arm::Access access);
 
+        // io methods
+        inline u8 io9Read8(u32 addr);
+        inline void io9Write8(u32 addr, u8 val);
+        inline u8 io7Read8(u32 addr);
+        inline void io7Write8(u32 addr, u8 val);
+
         // rom loading methods
         void loadRomFile(std::vector<char>& romFile);
         void sideLoadRomToMainMem(Arm::State* arm7, Arm::State* arm9);
+
+        // vram banks
+        u8 vramStat = 0;
+        VramPage vramPageTable[1024]; // ~0x8A4000~ 0x1000000 possible virtual space / 16KB
+        VramCnt vramCnt[9];
+        void setVramCntA(u8 newCnt);
+        void fixNonemptyOldPage(VramPage* oldPage);
+        uint getVramPageId(u32 addr);
+        uint getVramPageOffset(u32 addr);
+
     };
 
 }

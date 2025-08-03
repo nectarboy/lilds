@@ -20,8 +20,8 @@ set(SOURCES
     src/core/arm/interpreter/condition_codes.cpp
     src/core/arm/interpreter/decode.cpp
     src/core/arm/arm.cpp
+    src/core/bus/vram_banks.cpp
     src/core/bus/bus.cpp
-    src/core/bus/io.cpp
     src/core/bus/load_rom.cpp
 )
 

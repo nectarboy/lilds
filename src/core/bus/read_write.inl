@@ -1,5 +1,5 @@
 #include "bus.h"
-#include "io.h"
+#include "io.inl"
 #include "../arm/waitstates.inl"
 
 namespace Bus {
@@ -42,14 +42,15 @@ namespace Bus {
                         arm->addSharedMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
                 }
 
-                T val = io.arm9Read8(addr);
-                if constexpr (is_same_v<T, u16>) {
-                    val |= io.arm9Read8(addr + 1) << 8;
+                T val = io9Read8(addr);
+                if constexpr (!is_same_v<T, u8>) {
+                    val |= io9Read8(addr + 1) << 8;
                 }
                 if constexpr (is_same_v<T, u32>) {
-                    val |= io.arm9Read8(addr + 2) << 16;
-                    val |= io.arm9Read8(addr + 3) << 24;
+                    val |= io9Read8(addr + 2) << 16;
+                    val |= io9Read8(addr + 3) << 24;
                 }
+                printf("Arm9 read write %x \n", addr);
                 return val;
                 break;
             }
@@ -95,18 +96,48 @@ namespace Bus {
                         arm->addSharedMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
                 }
 
-                io.arm9Write8(addr, (u8)(val));
-                if constexpr (is_same_v<T, u16>) {
-                    io.arm9Write8(addr + 1, (u8)(val >> 8));
+                io9Write8(addr, (u8)(val));
+                if constexpr (!is_same_v<T, u8>) {
+                    io9Write8(addr + 1, (u8)(val >> 8));
                 }
                 if constexpr (is_same_v<T, u32>) {
-                    io.arm9Write8(addr + 2, (u8)(val >> 16));
-                    io.arm9Write8(addr + 3, (u8)(val >> 24));
+                    io9Write8(addr + 2, (u8)(val >> 16));
+                    io9Write8(addr + 3, (u8)(val >> 24));
+                }
+                printf("Arm9 io write %x <- %x \n", addr, val);
+                break;
+            }
+            // Vram
+            case 6: {
+                if constexpr (!silent) {
+                    if constexpr (is_same_v<T, u32>)
+                        arm->addVRAMWaitstates9<accessType, Arm::AccessWidth::Bus32>(access);
+                    else
+                        arm->addVRAMWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
+                }
+
+                if constexpr (is_same_v<T, u8>) // Arm9 8-bit writes to Vram are ignored
+                    break;
+
+                int pageId = getVramPageId(addr);
+                VramPage* page = &vramPageTable[pageId];
+                if (!page->empty) {
+                    printf("Arm9 writes to vram %x <- %x \n", addr, val);
+                    addr = page->pAddrBase + getVramPageOffset(addr);
+                    if constexpr (is_same_v<T, u8>)
+                        write8(vram, addr, val);
+                    else if constexpr (is_same_v<T, u16>)
+                        write16(vram, addr, val);
+                    else
+                        write32(vram, addr, val);
+                }
+                else {
+                    printf("Arm9 writes to unmapped vram %x <- %x \n", addr, val);
                 }
                 break;
             }
             default:
-                // printf("Arm9 writes %x <- %x \n", addr, val);
+                printf("Arm9 writes %x <- %x \n", addr, val);
                 break;
         }
     }
