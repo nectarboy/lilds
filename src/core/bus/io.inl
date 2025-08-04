@@ -21,10 +21,10 @@ namespace Bus {
     void State::io9Write8(u32 addr, u8 val) {
         switch (addr) {
             case IO_VRAMCNT_A:
-                setVramCntA(val);
+                setVramCntAB(0, val);
                 break;
             case IO_VRAMCNT_B:
-                // setVramCntB(val);
+                setVramCntAB(1, val);
                 break;
         }
     }

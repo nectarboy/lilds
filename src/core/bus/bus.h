@@ -76,8 +76,9 @@ namespace Bus {
         u8 vramStat = 0;
         VramPage vramPageTable[1024]; // ~0x8A4000~ 0x1000000 possible virtual space / 16KB
         VramCnt vramCnt[9];
-        void setVramCntA(u8 newCnt);
-        void fixNonemptyOldPage(VramPage* oldPage);
+        void setVramCntAB(int bank, u8 newCnt);
+        void setVramCntCD(int bank, u8 newCnt);
+        void fixNonemptyOldPage(VramPage* page);
         uint getVramPageId(u32 addr);
         uint getVramPageOffset(u32 addr);
 

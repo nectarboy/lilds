@@ -7,7 +7,7 @@ namespace Bus {
         bool banksSet[9];
         int pAddrBase = 0;
 
-        void setBank(uint bank) {
+        inline void setBank(uint bank) {
             assert(bank <= 9);
             banksSet[bank] = true;
             if (empty)
@@ -16,7 +16,7 @@ namespace Bus {
                 overlapping = true;
         }
 
-        void unsetBank(uint bank) {
+        inline void unsetBank(uint bank) {
             assert(bank <= 9);
             banksSet[bank] = false;
 
