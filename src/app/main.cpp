@@ -9,6 +9,7 @@
 #include <bitset>
 #include <algorithm>
 #include <cassert>
+#include "frontend/frontend.h"
 
 //#include "../helpers.h"
 #include "../core/ds.h"
@@ -18,7 +19,9 @@
 int main(int argc, char* argv[]) {
     std::cout << __DATE__ << "\t" << __TIME__ << std::endl;
 
+
     DS::State lilds;
+    
     std::cout << "Hello!" << std::endl;
 
     if (argc < 2) {
@@ -31,10 +34,22 @@ int main(int argc, char* argv[]) {
     std::vector<char> romFile = getFileBinaryVector((std::string)argv[1]);
     lilds.loadRomFileIntoMainMem(romFile);
 
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        printf("SDL Error\n");
+        return 1;
+    }
+
+    // Create frontend
+    Frontend frontend;
+    lilds.attachFrontend(&frontend);
+
     printf("Start execution\n\n");
     for (int i = 0; ; i++) {
         lilds.execute();
     }
 
+    // Quit
+    SDL_Quit();
     return 0;
 }

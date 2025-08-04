@@ -4,7 +4,7 @@ namespace Bus {
     struct VramPage {
         bool empty = true;
         bool overlapping = false;
-        bool banksSet[9];
+        bool banksSet[9]; // Consider making this a bitfield
         int pAddrBase = 0;
 
         inline void setBank(uint bank) {

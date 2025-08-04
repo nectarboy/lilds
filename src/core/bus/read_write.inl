@@ -15,6 +15,25 @@ namespace Bus {
 
         int region = addr >> 24;
         switch (region) {
+            // Instruction Tcm
+            case 0:
+            case 1: {
+                if constexpr (!silent) {
+                    if constexpr (is_same_v<T, u32>)
+                        arm->addTCMCacheWaitstates9<accessType, Arm::AccessWidth::Bus32>(access);
+                    else
+                        arm->addTCMCacheWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
+                }
+
+                addr &= 0x7fff;
+                if constexpr (is_same_v<T, u8>)
+                    return read8(iTcm, addr);
+                else if constexpr (is_same_v<T, u16>)
+                    return read16(iTcm, addr);
+                else
+                    return read32(iTcm, addr);
+                break;
+            }
             // Main Memory
             case 2: {
                 if constexpr (!silent) {
@@ -97,6 +116,25 @@ namespace Bus {
 
         int region = addr >> 24;
         switch (region) {
+            // Instruction Tcm
+            case 0:
+            case 1: {
+                if constexpr (!silent) {
+                    if constexpr (is_same_v<T, u32>)
+                        arm->addTCMCacheWaitstates9<accessType, Arm::AccessWidth::Bus32>(access);
+                    else
+                        arm->addTCMCacheWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
+                }
+
+                addr &= 0x7fff;
+                if constexpr (is_same_v<T, u8>)
+                    write8(iTcm, addr, val);
+                else if constexpr (is_same_v<T, u16>)
+                    write16(iTcm, addr, val);
+                else
+                    write32(iTcm, addr, val);
+                break;
+            }
             // Main Memory
             case 2: {
                 if constexpr (!silent) {
@@ -150,7 +188,7 @@ namespace Bus {
                 int pageId = getVramPageId(addr);
                 VramPage* page = &vramPageTable[pageId];
                 if (!page->empty) {
-                    printf("Arm9 writes to vram %x <- %x \n", addr, val);
+                    // printf("Arm9 writes to vram %x <- %x \n", addr, val);
                     addr = page->pAddrBase + getVramPageOffset(addr);
                     if constexpr (is_same_v<T, u8>)
                         write8(vram, addr, val);

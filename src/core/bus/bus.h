@@ -39,17 +39,17 @@ namespace Bus {
         // references
         DS::State* ds = nullptr;
 
+        // initialization methods
+        void initialize();
+
         // memory regions
-        u8 instTcm[0x8000];
-        u8 dataTcm[0x4000];
+        u8 iTcm[0x8000];
+        u8 dTcm[0x4000];
         u8 mainRam[0x400000];
         u8 sharedRam[0x18000];
         u8 vram[0xA4000];
         u8* rom = new u8[0];
         u64 romSize = 0;
-
-        // initialization methods
-        void initialize();
             
         // read/write methods
         template <typename T, Arm::AccessType accessType, bool silent = false>
@@ -73,8 +73,8 @@ namespace Bus {
         void sideLoadRomToMainMem(Arm::State* arm7, Arm::State* arm9);
 
         // vram banks
-        u8 vramStat = 0;
-        VramPage vramPageTable[1024]; // ~0x8A4000~ 0x1000000 possible virtual space / 16KB
+        static const u32 vramBankStartPAddrLut[9];
+        VramPage vramPageTable[1024]; // ~0x8A4000~ 0x1000000 possible virtual space / 16KB (16KB per page)
         VramCnt vramCnt[9];
         void setVramCntAB(int bank, u8 newCnt);
         void setVramCntCD(int bank, u8 newCnt);

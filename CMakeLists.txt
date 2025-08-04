@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
     # App
     src/app/main.cpp
+    src/app/frontend/frontend.cpp
 
     # Misc
     src/helpers.cpp
@@ -25,9 +26,13 @@ set(SOURCES
     src/core/bus/load_rom.cpp
 )
 
+find_package(SDL2 REQUIRED)
+include_directories(${SDL2_INCLUDE_DIRS})
+
 # Address Sanitizer
 # add_compile_options(-fsanitize=address)
 # add_link_options(-fsanitize=address)
 
 # Create the executable
 add_executable(lilds ${SOURCES})
+target_link_libraries(lilds ${SDL2_LIBRARIES})
