@@ -1,4 +1,5 @@
 #include "bus.h"
+#include "io.inl"
 
 namespace Bus {
 

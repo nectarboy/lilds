@@ -54,7 +54,7 @@ namespace DS {
         Arm::State* _arm7 = static_cast<Arm::State*>(arm7);
         Arm::State* _arm9 = static_cast<Arm::State*>(arm9);
 
-        // _arm7->execute();
+        _arm7->execute();
         _arm9->execute();
         _arm9->execute();
     }

@@ -86,7 +86,7 @@ namespace Bus {
                 int pageId = getVramPageId(addr);
                 VramPage* page = &vramPageTable[pageId];
                 if (!page->empty) {
-                    printf("Arm9 reads vram %x \n", addr);
+                    if constexpr (!silent) printf("Arm9 reads vram %x \n", addr);
                     addr = page->pAddrBase + getVramPageOffset(addr);
                     if constexpr (is_same_v<T, u8>)
                         return read8(vram, addr);
@@ -239,7 +239,7 @@ namespace Bus {
                 break;
             }
             default:
-                printf("Arm7 reads %x \n", addr);
+                // printf("Arm7 reads %x \n", addr);
                 return 0;
         }
     }
@@ -272,7 +272,7 @@ namespace Bus {
                 break;
             }
             default:
-                printf("Arm7 writes %x <- %x \n", addr, val);
+                // printf("Arm7 writes %x <- %x \n", addr, val);
                 break;
         }
     }

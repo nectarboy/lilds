@@ -39,14 +39,14 @@ namespace Interpreter {
                 cpu->finishInstruction();
             }
             // TODO: would this method be faster?
-            else if (cpu->exeStage == 1) {
-                cpu->pipelineFetch<0, Access::N>(false);
-            }
-            else if (cpu->exeStage == 2) {
-                cpu->pipelineFetch<1, Access::S>(false);
-                // cpu->pipelineStage = 2;
-                cpu->finishInstruction();
-            }
+            // else if (cpu->exeStage == 1) {
+            //     cpu->pipelineFetch<0, Access::N>(false);
+            // }
+            // else if (cpu->exeStage == 2) {
+            //     cpu->pipelineFetch<1, Access::S>(false);
+            //     // cpu->pipelineStage = 2;
+            //     cpu->finishInstruction();
+            // }
         }
 
         template <bool thumb>
@@ -73,13 +73,13 @@ namespace Interpreter {
                 cpu->issuePipelineFlush();
                 cpu->finishInstruction();
             }
-            else if (cpu->exeStage == 1) {
-                cpu->pipelineFetch<0, Access::N>(thumb);
-            }
-            else if (cpu->exeStage == 2) {
-                cpu->pipelineFetch<1, Access::S>(thumb);
-                cpu->finishInstruction();
-            }
+            // else if (cpu->exeStage == 1) {
+            //     cpu->pipelineFetch<0, Access::N>(thumb);
+            // }
+            // else if (cpu->exeStage == 2) {
+            //     cpu->pipelineFetch<1, Access::S>(thumb);
+            //     cpu->finishInstruction();
+            // }
         }
         template void bx<false>(State* cpu, u32 instruction);
         template void bx<true>(State* cpu, u32 instruction);
@@ -107,14 +107,14 @@ namespace Interpreter {
                 cpu->issuePipelineFlush();
                 cpu->finishInstruction();
             }
-            else if (cpu->exeStage == 1) {
-                cpu->pipelineFetch<0, Access::N>(true);
-            }
-            else if (cpu->exeStage == 2) {
-                cpu->pipelineFetch<1, Access::S>(true);
-                // cpu->pipelineStage = 2;
-                cpu->finishInstruction();
-            }
+            // else if (cpu->exeStage == 1) {
+            //     cpu->pipelineFetch<0, Access::N>(true);
+            // }
+            // else if (cpu->exeStage == 2) {
+            //     cpu->pipelineFetch<1, Access::S>(true);
+            //     // cpu->pipelineStage = 2;
+            //     cpu->finishInstruction();
+            // }
         }
         template void blx_reg<false>(State* cpu, u32 instruction);
         template void blx_reg<true>(State* cpu, u32 instruction);

@@ -16,7 +16,8 @@ struct Frontend {
     static const int dsFramebufferW = 256;
     static const int dsFramebufferH = 384;
     static const int dsFramebufferBPP = 4;
-    u8 dsFramebuffer[dsFramebufferW * dsFramebufferH * dsFramebufferBPP];
+    u32 dsFramebuffer[dsFramebufferW * dsFramebufferH];
+    
 
     // SDL
     SDL_Window* window = SDL_CreateWindow
