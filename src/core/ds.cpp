@@ -29,12 +29,6 @@ namespace DS {
         printf("Created DS Components\n");
     }
 
-    void State::attachFrontend(void* _frontend) {
-        frontend = _frontend;
-
-        printf("Attached Frontend\n");
-    }
-
     void State::initialize() {
         Arm::State* _arm7 = static_cast<Arm::State*>(arm7);
         Arm::State* _arm9 = static_cast<Arm::State*>(arm9);

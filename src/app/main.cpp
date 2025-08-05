@@ -9,9 +9,9 @@
 #include <bitset>
 #include <algorithm>
 #include <cassert>
-#include "frontend/frontend.h"
 
 //#include "../helpers.h"
+#include "frontend/frontend.h"
 #include "../core/ds.h"
 #include "../core/arm/arm.h"
 #include "../core/bus/bus.h"
@@ -19,9 +19,7 @@
 int main(int argc, char* argv[]) {
     std::cout << __DATE__ << "\t" << __TIME__ << std::endl;
 
-
     DS::State lilds;
-    
     std::cout << "Hello!" << std::endl;
 
     if (argc < 2) {
@@ -42,11 +40,13 @@ int main(int argc, char* argv[]) {
 
     // Create frontend
     Frontend frontend;
-    lilds.attachFrontend(&frontend);
+    frontend.attachDsCore(&lilds);
 
     printf("Start execution\n\n");
-    for (int i = 0; ; i++) {
-        lilds.execute();
+    while (true) {
+        bool quit = frontend.run();
+        if (quit)
+            break;
     }
 
     // Quit

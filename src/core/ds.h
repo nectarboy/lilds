@@ -15,7 +15,6 @@ namespace DS {
         void* arm7 = nullptr;
         void* arm9 = nullptr;
         void* bus = nullptr;
-        void* frontend = nullptr;
 
         // initialization methods
         void createComponents();

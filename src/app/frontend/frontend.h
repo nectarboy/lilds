@@ -1,8 +1,16 @@
 #pragma once
 #include "../../helpers.h"
+#include "../../core/ds.h"
 #include "SDL.h"
 
 struct Frontend {
+
+    // ds reference
+    DS::State* ds = nullptr;
+    void attachDsCore(DS::State* _ds);
+
+    // keyboard
+    std::map<int, bool> keyboard;
 
     // framebuffer
     static const int dsFramebufferW = 256;
@@ -10,7 +18,7 @@ struct Frontend {
     static const int dsFramebufferBPP = 4;
     u8 dsFramebuffer[dsFramebufferW * dsFramebufferH * dsFramebufferBPP];
 
-    // SDL structs
+    // SDL
     SDL_Window* window = SDL_CreateWindow
     (
         "lilds",
@@ -33,6 +41,9 @@ struct Frontend {
         dsFramebufferW, dsFramebufferH
     );
     SDL_Event sdlEvent;
+
+    // running methods
+    bool run();
 
     // destructor
     ~Frontend() {
