@@ -24,6 +24,7 @@ set(SOURCES
     src/core/bus/vram_banks.cpp
     src/core/bus/bus.cpp
     src/core/bus/load_rom.cpp
+    src/core/joypad/joypad.cpp
 )
 
 find_package(SDL2 REQUIRED)

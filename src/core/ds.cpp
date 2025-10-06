@@ -1,6 +1,7 @@
 #include "ds.h"
 #include "arm/arm.h"
 #include "bus/bus.h"
+#include "joypad/joypad.h"
 
 namespace DS {
 
@@ -9,6 +10,7 @@ namespace DS {
         Arm::State* _arm7 = static_cast<Arm::State*>(arm7);
         Arm::State* _arm9 = static_cast<Arm::State*>(arm9);
         Bus::State* _bus = static_cast<Bus::State*>(bus);
+        Joypad::State* _joypad = static_cast<Joypad::State*>(joypad);
 
         if (_arm7) delete _arm7;
         _arm7 = new Arm::State(Arm::Type::Arm7);    
@@ -22,9 +24,14 @@ namespace DS {
         _bus = new Bus::State();    
         _bus->ds = this;
 
+        if (_joypad) delete _joypad;
+        _joypad = new Joypad::State();
+        _joypad->ds = this;
+
         arm7 = _arm7;
         arm9 = _arm9;
         bus = _bus;
+        joypad = _joypad;
 
         printf("Created DS Components\n");
     }
@@ -33,10 +40,18 @@ namespace DS {
         Arm::State* _arm7 = static_cast<Arm::State*>(arm7);
         Arm::State* _arm9 = static_cast<Arm::State*>(arm9);
         Bus::State* _bus = static_cast<Bus::State*>(bus);
+        Joypad::State* _joypad = static_cast<Joypad::State*>(joypad);
 
         _arm7->initialize();
         _arm9->initialize();
         _bus->initialize();
+        _joypad->initialize();
+    }
+
+    // frontend methods
+    void State::updateJoypadWithKeyboard(std::map<int, bool>& keyboard) {
+        Joypad::State* _joypad = static_cast<Joypad::State*>(joypad);
+        _joypad->setRegistersWithKeyboard(keyboard);
     }
 
     // loading methods

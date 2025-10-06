@@ -13,13 +13,16 @@ namespace DS {
         void* arm7 = nullptr;
         void* arm9 = nullptr;
         void* bus = nullptr;
+        void* joypad = nullptr;
         void* cp15 = nullptr;
 
         // initialization methods
         void createComponents();
-        void attachFrontend(void* _frontend);
+        void attachFrontendComponents(std::map<int, bool>& frontendKeyboard);
         void initialize();
 
+        // frontend methods
+        void updateJoypadWithKeyboard(std::map<int, bool>& keyboard);
 
         // loading methods
         void loadRomFileIntoMainMem(std::vector<char>& romFile);

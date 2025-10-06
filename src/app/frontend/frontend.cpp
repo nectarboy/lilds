@@ -28,16 +28,18 @@ bool Frontend::run() {
         }
     }
 
+    ds->updateJoypadWithKeyboard(keyboard);
+
     u32 msBefore = SDL_GetTicks();
     for (int i = 0; i < 558566; i++)
         ds->execute();
     u32 msFrameTook = SDL_GetTicks() - msBefore;
 
-    char fpsTitle[100];
-    sprintf(fpsTitle, "[%.2f] lilds \n", 1000.0 / (float)(msFrameTook));
+    char fpsTitle[64];
+    snprintf(fpsTitle, sizeof fpsTitle, "[%.2f] lilds", 1000.0 / (float)(msFrameTook));
     SDL_SetWindowTitle(window, fpsTitle);
 
-    // lcdc draw
+    // [DEBUG] lcdc draw
     if (ds->bus) {
         Bus::State* bus = static_cast<Bus::State*>(ds->bus);
         for (int y = 0; y < dsFramebufferH/2; y++) {

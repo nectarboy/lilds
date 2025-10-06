@@ -1,13 +1,15 @@
 #include "bus.h"
+#include "../joypad/joypad.h"
 
-#define IO_DISPCNT     0x4000000
-#define IO_DISPSTAT    0x4000004
-#define IO_KEYINPUT    0x4000130
-#define IO_IME         0x4000208
-#define IO_VRAMSTAT    0x4000240
-#define IO_VRAMCNT_A   0x4000240
-#define IO_VRAMCNT_B   0x4000241
-#define IO_POWCNT      0x4000304
+#define IO_DISPCNT      0x4000000
+#define IO_DISPSTAT     0x4000004
+#define IO_KEYINPUT     0x4000130
+#define IO_EXTKEYIN     0x4000136 
+#define IO_IME          0x4000208
+#define IO_VRAMSTAT     0x4000240
+#define IO_VRAMCNT_A    0x4000240
+#define IO_VRAMCNT_B    0x4000241
+#define IO_POWCNT       0x4000304
 
 namespace Bus {
 
@@ -19,10 +21,10 @@ namespace Bus {
                 break;
 
             case IO_KEYINPUT:
-                return 0xff;
+                return static_cast<Joypad::State*>(ds->joypad)->getIOPart_KeyInput();
                 break;
             case IO_KEYINPUT + 1:
-                return 0x3;
+                return static_cast<Joypad::State*>(ds->joypad)->getIOPart_KeyInput() >> 8;
                 break;
             
         }
