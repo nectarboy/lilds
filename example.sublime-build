@@ -1,6 +1,0 @@
-{
-  "shell_cmd": "cmake --build Build --config Debug && start cmd /k \"Build\\Debug\\lilds.exe && pause && exit\"",
-  "working_dir": "$pathtorepo",
-  "selector": "source.c, source.cpp, source.h, source.hpp",
-  "file_regex": "^(...*?):([0-9]+):([0-9]+): (.*)$"
-}

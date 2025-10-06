@@ -15,7 +15,7 @@ namespace Bus {
 
         int region = addr >> 24;
         switch (region) {
-            // Instruction Tcm
+            // Instruction Tcm (TODO: CP15 stuff)
             case 0:
             case 1: {
                 if constexpr (!silent) {

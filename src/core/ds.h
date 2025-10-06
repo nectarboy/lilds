@@ -1,7 +1,5 @@
 #pragma once
 #include "../helpers.h"
-// #include "arm/arm.h"
-// #include "bus/bus.h"
 
 namespace DS {
 
@@ -15,6 +13,7 @@ namespace DS {
         void* arm7 = nullptr;
         void* arm9 = nullptr;
         void* bus = nullptr;
+        void* cp15 = nullptr;
 
         // initialization methods
         void createComponents();
