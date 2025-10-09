@@ -18,6 +18,7 @@ set(SOURCES
     # Core
     src/core/ds.cpp
     src/core/arm/interpreter/arm32.cpp
+    src/core/arm/interpreter/thumb16.cpp
     src/core/arm/interpreter/condition_codes.cpp
     src/core/arm/interpreter/decode.cpp
     src/core/arm/arm.cpp

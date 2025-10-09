@@ -221,12 +221,12 @@ namespace Interpreter {
                     }
                     case 0xA: { // CMP (arithmetic)
                         op2 = aluBarrelShifter<false>(cpu, i, r, op2, r15Off, false);
-                        u32 res = aluSub<true>(cpu, op1, op2, rd, s);
+                        (void)aluSub<true>(cpu, op1, op2, rd, s);
                         break;
                     }
                     case 0xB: { // CMN (arithmetic)
                         op2 = aluBarrelShifter<false>(cpu, i, r, op2, r15Off, false);
-                        u32 res = aluAdd<true>(cpu, op1, op2, rd, s);
+                        (void)aluAdd<true>(cpu, op1, op2, rd, s);
                         break;
                     }
                     case 0xC: { // ORR (logical)
@@ -282,21 +282,17 @@ namespace Interpreter {
                 u32 rs = (instruction >> 8) & 0xf;
                 u32 rm = (instruction >> 0) & 0xf;
 
-                u64 res = (u64)cpu->reg[rm] * (u64)cpu->reg[rs] + (u64)(cpu->reg[rn] * a);
+                u32 res = (u64)cpu->reg[rm] * (u64)cpu->reg[rs] + (u64)(cpu->reg[rn] * a);
                 cpu->writeReg(rd, (u32)res);
 
-                if (s) {
-                    cpu->cpsr.n = (res >> 63) == 1;
-                    cpu->cpsr.z = res == 0;
-                    if (cpu->type == Type::Arm7)
-                        cpu->cpsr.c = false; // Set by the calculation on ARMv4 only
-                }
+                if (s)
+                    mul32SetNZCFlags(cpu, res);
 
                 int m = mulGetICycles(cpu->reg[rs], a);
                 cpu->tmp[0] = m;
             }
             else if (cpu->exeStage == cpu->tmp[0]) {
-                // tmp is set to r, where r is the number of i cycles, depending on Rs's value
+                // tmp is set to r, where r is the number of i cycles, depending on [Rs]'s value
                 cpu->finishInstruction();
             }
         }
@@ -331,12 +327,8 @@ namespace Interpreter {
                 if (rdHi == 15 || rdLo == 15)
                     cpu->issuePipelineFlush();
 
-                if (s) {
-                    cpu->cpsr.n = (res >> 63) == 1;
-                    cpu->cpsr.z = res == 0;
-                    if (cpu->type == Type::Arm7)
-                        cpu->cpsr.c = false; // Set by the calculation on ARMv4 only
-                }
+                if (s)
+                    mul64SetNZCFlags(cpu, res);
 
                 int m = mulGetICycles(cpu->reg[rs], a) + 1;
                 cpu->tmp[0] = m;
@@ -681,7 +673,7 @@ namespace Interpreter {
                     }
                     case 7: { // LDRSH
                         if (cpu->type == Type::Arm7) {
-                             // Misaligned (ARM7) LDRSH reads result in a literal LDRSB read instead
+                            // Misaligned (ARM7) LDRSH reads result in a literal LDRSB read instead
                             if (addr & 1) {
                                 u32 val = cpu->read8(addr, Access::N);
                                 val |= 0xffff'ff00 * (val >> 7);

@@ -35,9 +35,12 @@ namespace Interpreter {
     inline u32 aluAddCarry(State* cpu, u32 a, u32 b, int rd, bool s);
     inline u32 aluSub(State* cpu, u32 a, u32 b, int rd, bool s);
     inline u32 aluSubCarry(State* cpu, u32 a, u32 b, int rd, bool s);
-    inline u32 aluBarrelShifter(State* cpu, bool i, bool r, u32 op2, int r15Off, bool affectC);
+    inline u32 aluRegisterBarrelShifter(State* cpu, int shifttype, u32 val, u32 shift, bool s);
+    inline u32 aluBarrelShifter(State* cpu, bool i, bool r, u32 op2, int r15Off);
 
     // mul functions
+    inline void mul32SetNZCFlags(State* cpu, u32 res);
+    inline void mul64SetNZCFlags(State* cpu, u64 res);
     inline u32 mulGetICycles(u32 op, bool a);
 
     // arm instructions
@@ -75,6 +78,19 @@ namespace Interpreter {
     // thumb instructions
     typedef void (*ThumbInstruction)(struct State*, u16);
     namespace Thumb {
+
+        void moveShiftedRegister(State* cpu, u16 instruction);
+        void addSubtract(State* cpu, u16 instruction);
+        void moveCompareAddSubtractImmediate(State* cpu, u16 instruction);
+        void hiRegisterOperations(State* cpu, u16 instruction);
+
+        void loadPCRelative(State* cpu, u16 instruction);
+        void loadStoreWithRegisterOffset(State* cpu, u16 instruction);
+        void loadStoreSignExtendedByteHalfword(State* cpu, u16 instruction);
+        void loadStoreWithImmediateOffset(State* cpu, u16 instruction);
+        void loadStoreHalfword(State* cpu, u16 instruction);
+        void loadStoreSPRelative(State* cpu, u16 instruction);
+
         ThumbInstruction decode(State* cpu, u16 instruction);
     }
 }

@@ -33,7 +33,6 @@ namespace Joypad {
 
         // registers
         u16 keysBitmap;
-
         inline void setKey(Key key, bool pressed) {
             if (pressed)
                 keysBitmap &= ~(1 << (int)key);

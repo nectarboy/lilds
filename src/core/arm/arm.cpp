@@ -127,11 +127,6 @@ void State::setThumb(bool t) {
     if (cpsr.t != t) {
         cpsr.t = t;
         issuePipelineFlush();
-
-        if (t) {
-            printf("%s switched to thumb", getTypeString().c_str());
-            lilds__crash();
-        }
     }
 }
 
@@ -186,6 +181,9 @@ void State::execute() {
                         reg[15] += 4;
                 }
                 else {
+                    printf("%s switched to thumb\n", getTypeString().c_str());
+                    lilds__crash();
+
                     pipeline[1] = readCode16(reg[15], nextInstructionAccessType);
                     nextInstructionAccessType = Access::S;
 
