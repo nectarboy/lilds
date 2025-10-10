@@ -143,7 +143,7 @@ namespace Interpreter {
                         if (s)
                             cpu->cpsr.c = 1 & (val >> (0b11111 & u32(shift - 1)));
                     }  
-                    return bitRotateRight(val, 32, shift);// Rotate right
+                    return bitRotateRight(val, 32, shift); // Rotate right
                 }
             }
             default: {

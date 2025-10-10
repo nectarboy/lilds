@@ -30,7 +30,7 @@ namespace Interpreter {
 
         void addSubtract(State* cpu, u16 instruction) {
             cpu->cycles++;
-            int op = (instruction >> 9) & 0b11;
+            uint op = (instruction >> 9) & 0b11;
             u32 rn = (instruction >> 6) & 0b111;
             u32 rs = (instruction >> 3) & 0b111;
             u32 rd = instruction & 0b111;
@@ -60,7 +60,7 @@ namespace Interpreter {
 
         void moveCompareAddSubtractImmediate(State* cpu, u16 instruction) {
             cpu->cycles++;
-            int op = (instruction >> 11) & 0b11;
+            uint op = (instruction >> 11) & 0b11;
             u32 rd = (instruction >> 8) & 0b111;
             u32 nn = instruction & 0xff;
 
@@ -90,7 +90,7 @@ namespace Interpreter {
         void aluOperations(State* cpu, u16 instruction) {
             cpu->cycles++;
             if (cpu->exeStage == 0) {
-                int op = (instruction >> 6) & 0b1111;
+                uint op = (instruction >> 6) & 0b1111;
                 u32 rs = (instruction >> 3) & 0b111;
                 u32 rd = instruction & 0b111;
                 [[assume(rd <= 7)]];
@@ -136,8 +136,11 @@ namespace Interpreter {
                         cpu->finishInstruction();
                         break;
                     }
-                    case 0x7: { // RORS
-                        cpu->reg[rd] = aluRegisterBarrelShifter<true>(cpu, 3, cpu->reg[rd], cpu->reg[rs] & 0xff, true);
+                    case 0x7: { // RORS, TODO: does zero shift not affect c flag for lsl, lsr, and asr too?
+                        u32 shift = cpu->reg[rs] & 0xff;
+                        if (shift != 0) {
+                            cpu->reg[rd] = aluRegisterBarrelShifter<true>(cpu, 3, cpu->reg[rd], shift, true);
+                        }
                         aluSetLogicFlags<>(cpu, cpu->reg[rd], rd, true);
                         cpu->tmp[0] = 1;
                         break;
@@ -148,7 +151,7 @@ namespace Interpreter {
                         break;
                     }
                     case 0x9: { // NEGS
-                        cpu->reg[rd] = aluSub<>(cpu, 0, cpu->reg[rd], rd, true);
+                        cpu->reg[rd] = aluSub<>(cpu, 0, cpu->reg[rs], rd, true);
                         cpu->finishInstruction();
                         break;
                     }
@@ -200,7 +203,7 @@ namespace Interpreter {
 
         void hiRegisterOperations(State* cpu, u16 instruction) {
             cpu->cycles++;
-            int op = (instruction >> 8) & 0b11;
+            uint op = (instruction >> 8) & 0b11;
             u32 rs = (instruction >> 3) & 0b1111;
             u32 rd_3 = (instruction >> 7) & 1;
             u32 rd = (instruction & 0b111) | (rd_3 << 3);
@@ -250,7 +253,7 @@ namespace Interpreter {
         void loadStoreWithRegisterOffset(State* cpu, u16 instruction) {
             cpu->cycles++;
             if (cpu->exeStage == 0) {
-                int op = (instruction >> 10) & 0b11;
+                uint op = (instruction >> 10) & 0b11;
                 u32 ro = (instruction >> 6) & 0b111;
                 u32 rb = (instruction >> 3) & 0b111;
                 u32 rd = instruction & 0b111;
@@ -289,7 +292,7 @@ namespace Interpreter {
         void loadStoreSignExtendedByteHalfword(State* cpu, u16 instruction) {
             cpu->cycles++;
             if (cpu->exeStage == 0) {
-                int op = (instruction >> 10) & 0b11;
+                uint op = (instruction >> 10) & 0b11;
                 u32 ro = (instruction >> 6) & 0b111;
                 u32 rb = (instruction >> 3) & 0b111;
                 u32 rd = instruction & 0b111;
@@ -343,7 +346,7 @@ namespace Interpreter {
         void loadStoreWithImmediateOffset(State* cpu, u16 instruction) {
             cpu->cycles++;
             if (cpu->exeStage == 0) {
-                int op = (instruction >> 11) & 0b11;
+                uint op = (instruction >> 11) & 0b11;
                 u32 nn = (instruction >> 6) & 0b11111;
                 u32 rb = (instruction >> 3) & 0b111;
                 u32 rd = instruction & 0b111;
