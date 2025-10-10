@@ -31,8 +31,12 @@ namespace Interpreter {
                 bool l = (instruction >> 24) & 1;
                 cpu->cpsr.t |= isBlx;
                 off += isBlx * l * 2;
-                if (l || isBlx)
+                if (l || isBlx) {
                     cpu->reg[14] = cpu->reg[15] - 4;
+                }
+
+                if (isBlx)
+                    lilds__crash();
 
                 cpu->reg[15] += off;
                 cpu->issuePipelineFlush();
@@ -107,14 +111,6 @@ namespace Interpreter {
                 cpu->issuePipelineFlush();
                 cpu->finishInstruction();
             }
-            // else if (cpu->exeStage == 1) {
-            //     cpu->pipelineFetch<0, Access::N>(true);
-            // }
-            // else if (cpu->exeStage == 2) {
-            //     cpu->pipelineFetch<1, Access::S>(true);
-            //     // cpu->pipelineStage = 2;
-            //     cpu->finishInstruction();
-            // }
         }
         template void blx_reg<false>(State* cpu, u32 instruction);
         template void blx_reg<true>(State* cpu, u32 instruction);

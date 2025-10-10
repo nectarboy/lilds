@@ -238,6 +238,23 @@ namespace Bus {
                     return read32(mainRam, addr);
                 break;
             }
+            case 3: {
+                // Shared WRAM
+                if (addr < 0x0380'0000) {
+                    return 0;
+                }
+                // ARM7-WRAM
+                else {
+                    addr &= 0xffff;
+                    if constexpr (is_same_v<T, u8>)
+                        return read8(arm7Ram, addr);
+                    else if constexpr (is_same_v<T, u16>)
+                        return read16(arm7Ram, addr);
+                    else
+                        return read32(arm7Ram, addr);
+                }
+                break;
+            }
             default:
                 // printf("Arm7 reads %x \n", addr);
                 return 0;
@@ -269,6 +286,23 @@ namespace Bus {
                     write16(mainRam, addr, val);
                 else
                     write32(mainRam, addr, val);
+                break;
+            }
+            case 3: {
+                // Shared WRAM
+                if (addr < 0x0380'0000) {
+
+                }
+                // ARM7-WRAM
+                else {
+                    addr &= 0xffff;
+                    if constexpr (is_same_v<T, u8>)
+                        write8(arm7Ram, addr, val);
+                    else if constexpr (is_same_v<T, u16>)
+                        write16(arm7Ram, addr, val);
+                    else
+                        write32(arm7Ram, addr, val);
+                }
                 break;
             }
             default:

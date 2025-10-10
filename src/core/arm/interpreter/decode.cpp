@@ -40,9 +40,15 @@ namespace Interpreter {
                         if (cpu->canPrint()) printf("Msr at %X: %X \n", cpu->reg[15]-8, instruction);
                         return &msr<false>;
                     }
-                    if ((bits543210 & 0b111111) == 0b010010 && bits7654 == 0b0001) {
-                        if (cpu->canPrint()) printf("Bx at %X: %X \n", cpu->reg[15]-8, instruction);
-                        return &bx<false>;
+                    if ((bits543210 & 0b111111) == 0b010010) {
+                        if (bits7654 == 0b0001) {
+                            if (cpu->canPrint()) printf("Bx at %X: %X \n", cpu->reg[15]-8, instruction);
+                            return &bx<false>;
+                        }
+                        if (cpu->type == Type::Arm9 && bits7654 == 0b0011) {
+                            if (cpu->canPrint()) printf("Blx_reg at %X: %X \n", cpu->reg[15]-8, instruction);
+                            return &blx_reg<false>;
+                        }
                     }
                     if ((bits543210 & 0b111011) == 0b110000) {
                         if (cpu->canPrint()) printf("Invalid g00 instruction at %X: %X \n", cpu->reg[15]-8, instruction);
@@ -89,7 +95,7 @@ namespace Interpreter {
                         cpu->PRINTSTATE();
                         return &swi;
                     }
-                    printf("Unimplemented g11 instruction at %X: %X \n", cpu->reg[15]-8, instruction);
+                    printf("%s Unimplemented g11 instruction at %X: %X \n", cpu->getTypeString().c_str(), cpu->reg[15]-8, instruction);
                     // cpu->PRINTSTATE();
                     return &DEBUG_noop;
                     break;
@@ -191,7 +197,7 @@ namespace Interpreter {
                 return &longBranchWithLink_2;
             }
 
-            std::cout << "Unimplemented THUMB instruction:\t" << std::hex << instruction << " PC:\t" << cpu->reg[15] - 4 << std::dec << "\n";
+            std::cout << cpu->getTypeString() << " Unimplemented THUMB instruction:\t" << std::hex << instruction << " PC:\t" << cpu->reg[15] - 4 << std::dec << "\n";
             cpu->PRINTSTATE();
             return &DEBUG_noop;
         }

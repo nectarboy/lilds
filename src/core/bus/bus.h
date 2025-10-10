@@ -47,6 +47,7 @@ namespace Bus {
         u8 dTcm[0x4000];
         u8 mainRam[0x400000];
         u8 sharedRam[0x18000];
+        u8 arm7Ram[0x10000];
         u8 vram[0xA4000];
         u8* rom = new u8[0];
         u64 romSize = 0;

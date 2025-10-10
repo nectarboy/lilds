@@ -134,6 +134,7 @@ void State::setThumb(bool t) {
 // execution methods
 void State::execute() {
     evenClock = !evenClock;
+    u32 oldPc = reg[15];
 
     // TODO: (Arm9) implement seperate data fetch and code fetch waitstates.
     // Specifically, code fetch waitstates stall the pipeline, while data fetch waitstates don't, due to seperate code and data paths.
@@ -210,9 +211,10 @@ void State::execute() {
             }
         }
 
-        if (reg[15] < 0x0200'0000) {
-            lilds__crash();
-        }
+        // if (reg[15] < 0x0200'0000 || reg[15] >= 0x0400'0000) {
+        //     printf("%s R15 outside main or shared mem: %X, before: %X\n", getTypeString().c_str(), reg[15], oldPc-8);
+        //     lilds__crash();
+        // }
     }
 
     // TODO: theres a second execution stage where exceptions are handled
@@ -286,7 +288,7 @@ std::string State::getTypeString() {
 }
 bool State::canPrint() {
     return false;
-    return type == Type::Arm9;
+    return type == Type::Arm7;
 }
 
 }
