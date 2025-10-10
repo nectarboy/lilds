@@ -109,7 +109,8 @@ void State::setMode(Mode mode) {
     cpsr.mode = mode;
 
     // FIQ mode reg bank switch
-    if (bank == 1 || oldbank == 1) {
+    const int fiqBank = getModeBank(Mode::FIQ);
+    if (bank == fiqBank || oldbank == fiqBank) {
         for (int i = 0; i < 5; i++) {
             bankedreg[oldbank][i] = reg[8 + i];
             reg[8 + i] = bankedreg[bank][i];
@@ -117,10 +118,10 @@ void State::setMode(Mode mode) {
     }
 
     // Regular reg bank switch
-    bankedreg[oldbank][6] = reg[13];
-    bankedreg[oldbank][7] = reg[14];
-    reg[13] = bankedreg[bank][6];
-    reg[14] = bankedreg[bank][7];
+    bankedreg[oldbank][5] = reg[13];
+    bankedreg[oldbank][6] = reg[14];
+    reg[13] = bankedreg[bank][5];
+    reg[14] = bankedreg[bank][6];
 
 }
 void State::setThumb(bool t) {
@@ -181,8 +182,8 @@ void State::execute() {
                         reg[15] += 4;
                 }
                 else {
-                    printf("%s switched to thumb\n", getTypeString().c_str());
-                    lilds__crash();
+                    // printf("%s switched to thumb\n", getTypeString().c_str());
+                    // lilds__crash();
 
                     pipeline[1] = readCode16(reg[15], nextInstructionAccessType);
                     nextInstructionAccessType = Access::S;
@@ -207,6 +208,10 @@ void State::execute() {
                 Interpreter::ThumbInstruction instr = static_cast<Interpreter::ThumbInstruction>(currentInstructionFun);
                 instr(this, currentInstruction);
             }
+        }
+
+        if (reg[15] < 0x0200'0000) {
+            lilds__crash();
         }
     }
 
@@ -260,6 +265,10 @@ inline void State::pipelineFetch(bool thumb) {
 
 // initialization methods
 void State::initialize() {
+    thumbLongBranchStage = false;
+    issuePipelineFlush();
+    finishInstruction();
+
     cpsr.t = false;
     cpsr.mode = Mode::System;
     setMode(Mode::System);

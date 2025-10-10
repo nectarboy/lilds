@@ -207,20 +207,20 @@ namespace Interpreter {
 
             switch (op) {
                 case 0: { // ADD
-                    cpu->reg[rd] = aluAdd<>(cpu, cpu->reg[rd], cpu->reg[rs] + 2*(rs == 15), rd, false);
+                    cpu->reg[rd] = aluAdd<>(cpu, cpu->reg[rd], cpu->reg[rs] + 0*(rs == 15), rd, false);
                     break;
                 }
                 case 1: { // CMP
-                    (void)aluSub<true>(cpu, cpu->reg[rd], cpu->reg[rs] + 2*(rs == 15), rd, true);
+                    (void)aluSub<true>(cpu, cpu->reg[rd], cpu->reg[rs] + 0*(rs == 15), rd, true);
                     break;
                 }
                 case 2: { // MOV
-                    cpu->writeReg(rd, cpu->reg[rs] + 2*(rs == 15));
+                    cpu->writeReg(rd, cpu->reg[rs] + 0*(rs == 15));
                     break;
                 }
                 case 3: { // BX / BLX
                     cpu->cpsr.t = (bool)(cpu->reg[rs] & 1);
-                    u32 addr = cpu->reg[rs] + (rs == 15) * 2;
+                    u32 addr = cpu->reg[rs] + (rs == 15) * 0;
                     if (rd_3)
                         cpu->reg[14] = cpu->reg[15] - 2 + 1; // Thumb bit set
                     cpu->reg[15] = addr;
@@ -239,7 +239,7 @@ namespace Interpreter {
                 u32 rd = (instruction >> 8) & 0b111;
                 u32 nn = instruction & 0xff;
 
-                u32 addr = (cpu->reg[15] + 2 + nn*4);
+                u32 addr = (cpu->reg[15] + 0 + nn*4);
                 cpu->reg[rd] = cpu->read32(addr & 0xffff'fffc, Access::N);
             }
             else {
@@ -431,6 +431,137 @@ namespace Interpreter {
                 cpu->finishInstruction();
             }
         }
+
+        // memory addressing instructions (love em)
+        void getRelativeAddress(State* cpu, u16 instruction) {
+            cpu->cycles++;
+            bool spBase = (instruction >> 11) & 1;
+            u32 rd = (instruction >> 8) & 0b111;
+            u32 nn = instruction & 0xff;
+
+            cpu->reg[rd] = nn * 4;
+            if (!spBase)
+                cpu->reg[rd] += (cpu->reg[15] + 0) & 0xffff'fffc;
+            else
+                cpu->reg[rd] += cpu->reg[13];
+
+            cpu->finishInstruction();
+        }
+
+        void addOffsetToStackPointer(State* cpu, u16 instruction) {
+            cpu->cycles++;
+            bool sub = (instruction >> 7) & 1;
+            u32 nn = instruction & 0xff;
+
+            if (!sub)
+                cpu->reg[13] += nn * 4;
+            else
+                cpu->reg[13] -= nn * 4;
+
+            cpu->finishInstruction();
+        }
+
+        // memory multiple load store instructions (TODO: actually implement these properly)
+        void pushPopRegisters(State* cpu, u16 instruction) {
+            bool l = (instruction >> 11) & 1;
+            bool r = (instruction >> 8) & 1;
+            u32 rlist = instruction & 0xff;
+
+            bool p = !l;
+            bool u = l;
+
+            u32 inst = 0b1110'100'0'0'0'1'0'1101'0000000000000000; // LDM/STM r13!, {}
+            inst |= p << 24;
+            inst |= u << 23;
+            inst |= l << 20;
+            inst |= rlist;
+            inst |= r << (14 + l);
+            Arm::ldm_stm<true>(cpu, inst);
+        }
+
+        void multipleLoadStore(State* cpu, u16 instruction) {
+            bool l = (instruction >> 11) & 1;
+            u32 rb = (instruction >> 8) & 0b111;
+            u32 rlist = instruction & 0xff;
+
+            u32 inst = 0b1110'100'0'1'0'1'0'0000'0000000000000000; // LDM/STM rb!, {rlist}
+            inst |= l << 20;
+            inst |= rb << 16;
+            inst |= rlist;
+            Arm::ldm_stm<true>(cpu, inst);
+        }
+
+        // jump and call instructions
+        void conditionalBranch(State* cpu, u16 instruction) {
+            cpu->cycles++;
+            if (!evalConditionCode(cpu, CC((instruction >> 8) & 0xf))) {
+                cpu->finishInstruction();
+                return;
+            }
+
+            s32 nn = (s32)(s8)(instruction & 0xff);
+            cpu->reg[15] += nn * 2;
+            cpu->issuePipelineFlush();
+
+            cpu->finishInstruction();
+        }
+
+        void unconditionalBranch(State* cpu, u16 instruction) {
+            cpu->cycles++;
+            u32 nn = instruction & 0x7ff;
+            nn |= ~(u32)(0x7ff) * (nn >> 10);
+
+            cpu->reg[15] += nn * 2;
+            cpu->issuePipelineFlush();
+
+            cpu->finishInstruction();
+        }
+
+        void longBranchWithLink_1(State* cpu, u16 instruction) {
+            cpu->cycles++;
+            u32 nn = instruction & 0x7ff;
+            nn |= ~(u32)(0x7ff) * (nn >> 10);
+
+            cpu->reg[14] = cpu->reg[15] + (nn << 12);
+            cpu->finishInstruction();
+        }
+
+        void longBranchWithLink_2(State* cpu, u16 instruction) {
+            cpu->cycles++;
+            bool normalBl = (instruction >> 12) & 1;
+            u32 nn = instruction & 0x7ff;
+
+            u32 addr = cpu->reg[14] + (nn << 1);
+            cpu->reg[14] = cpu->reg[15] - 2 + 1; // Thumb bit set
+            cpu->reg[15] = addr;
+            if (!normalBl) {
+                if (cpu->type != Type::Arm9) {
+                    lilds__crash();
+                }
+                cpu->cpsr.t = false;
+            }
+
+            cpu->issuePipelineFlush();
+            cpu->finishInstruction();
+        }
+
+        void softwareInterrupt(State* cpu, u16 instruction) {
+            cpu->cycles++;
+            // TODO
+            cpu->finishInstruction();
+        }
+
+        // undefined
+        void undefined(State* cpu, u16 instruction) {
+            cpu->cycles++;
+            cpu->finishInstruction();
+
+            std::cout << "thumb undefined reached at pc: " << std::hex << cpu->reg[15] - 4 << std::dec << "\n";
+            cpu->PRINTSTATE();
+        }
+
+        // debug
+        void DEBUG_noop(State* cpu, u16 instruction) {}
 
     }
 

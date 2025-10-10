@@ -82,6 +82,7 @@ namespace Interpreter {
         void moveShiftedRegister(State* cpu, u16 instruction);
         void addSubtract(State* cpu, u16 instruction);
         void moveCompareAddSubtractImmediate(State* cpu, u16 instruction);
+        void aluOperations(State* cpu, u16 instruction);
         void hiRegisterOperations(State* cpu, u16 instruction);
 
         void loadPCRelative(State* cpu, u16 instruction);
@@ -90,6 +91,22 @@ namespace Interpreter {
         void loadStoreWithImmediateOffset(State* cpu, u16 instruction);
         void loadStoreHalfword(State* cpu, u16 instruction);
         void loadStoreSPRelative(State* cpu, u16 instruction);
+
+        void getRelativeAddress(State* cpu, u16 instruction);
+        void addOffsetToStackPointer(State* cpu, u16 instruction);
+
+        void pushPopRegisters(State* cpu, u16 instruction);
+        void multipleLoadStore(State* cpu, u16 instruction);
+
+        void conditionalBranch(State* cpu, u16 instruction);
+        void unconditionalBranch(State* cpu, u16 instruction);
+        void longBranchWithLink_1(State* cpu, u16 instruction);
+        void longBranchWithLink_2(State* cpu, u16 instruction);
+        void softwareInterrupt(State* cpu, u16 instruction);
+
+        void undefined(State* cpu, u16 instruction);
+
+        void DEBUG_noop(State* cpu, u16 instruction);
 
         ThumbInstruction decode(State* cpu, u16 instruction);
     }

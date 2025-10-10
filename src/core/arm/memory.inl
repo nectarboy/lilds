@@ -5,7 +5,6 @@
 
 namespace Arm {
 
-    // TODO: inline the bus methods for extra perf
     inline u8 State::read8(u32 addr, Access access) {
         Bus::State* bus = static_cast<Bus::State*>(ds->bus);
         if (type == Type::Arm7)

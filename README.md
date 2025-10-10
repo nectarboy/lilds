@@ -20,4 +20,4 @@ If using CMake, configure it, then build by running
 cmake --build x64/Debug
 ```
 
-Included is also an example Sublime Text project file if you want to use that too.
+Included in `docs/` is also an example Sublime Text project file if you want to use that too.

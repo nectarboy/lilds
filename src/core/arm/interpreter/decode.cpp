@@ -103,7 +103,97 @@ namespace Interpreter {
 
     namespace Thumb {
         ThumbInstruction decode(State* cpu, u16 instruction) {
-            return nullptr;
+            u32 bits5432109876 = instruction >> 6;
+
+            if ((bits5432109876 & 0b1111100000) == 0b0001100000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_AddSubtract:\t" << std::hex << instruction << std::dec << "\n";
+                return &addSubtract;
+            }
+            if ((bits5432109876 & 0b1110000000) == 0b0000000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_MoveShiftedRegister:\t" << std::hex << instruction << std::dec << "\n";
+                return &moveShiftedRegister;
+            }
+            if ((bits5432109876 & 0b1110000000) == 0b0010000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_MovCmpAddSubImmediate:\t" << std::hex << instruction << std::dec << "\n";
+                return &moveCompareAddSubtractImmediate;
+            }
+            if ((bits5432109876 & 0b1111110000) == 0b0100000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_ALUOperations:\t" << std::hex << instruction << std::dec << "\n";
+                return &aluOperations;
+            }
+            if ((bits5432109876 & 0b1111110000) == 0b0100010000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_HiRegisterOperations:\t" << std::hex << instruction << std::dec << "\n";
+                return &hiRegisterOperations;
+            }
+            if ((bits5432109876 & 0b1111100000) == 0b0100100000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_PCRelativeLoad:\t" << std::hex << instruction << std::dec << "\n";
+                return &loadPCRelative;
+            }
+            if ((bits5432109876 & 0b1111001000) == 0b0101000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_LoadStoreWithRegisterOffset:\t" << std::hex << instruction << std::dec << "\n";
+                return &loadStoreWithRegisterOffset;
+            }
+            if ((bits5432109876 & 0b1111001000) == 0b0101001000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_LoadStoreSignExtendedByteHalfword:\t" << std::hex << instruction << std::dec << "\n";
+                return &loadStoreSignExtendedByteHalfword;
+            }
+            if ((bits5432109876 & 0b1110000000) == 0b0110000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_LoadStoreWithImmediateOffset:\t" << std::hex << instruction << std::dec << "\n";
+                return &loadStoreWithImmediateOffset;
+            }
+            if ((bits5432109876 & 0b1111000000) == 0b1000000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_LoadStoreHalfword:\t" << std::hex << instruction << std::dec << "\n";
+                return &loadStoreHalfword;
+            }
+            if ((bits5432109876 & 0b1111000000) == 0b1001000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_SPRelativeLoadStore:\t" << std::hex << instruction << std::dec << "\n";
+                return &loadStoreSPRelative;
+            }
+            if ((bits5432109876 & 0b1111000000) == 0b1010000000) {
+                if (cpu->canPrint()) std::cout << "getRelativeAddress:\t" << std::hex << instruction << std::dec << "\n";
+                return &getRelativeAddress;
+            }
+            if ((bits5432109876 & 0b1111111100) == 0b1011000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_AddOffsetToStackPointer:\t" << std::hex << instruction << std::dec << "\n";
+                return &addOffsetToStackPointer;
+            }
+            if ((bits5432109876 & 0b1111011000) == 0b1011010000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_PushPopRegisters:\t" << std::hex << instruction << std::dec << "\n";
+                return &pushPopRegisters;
+            }
+            if ((bits5432109876 & 0b1111000000) == 0b1100000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_MultipleLoadStore:\t" << std::hex << instruction << std::dec << "\n";
+                return &multipleLoadStore;
+            }
+            if ((bits5432109876 & 0b1111111100) == 0b1101111100) {
+                if (cpu->canPrint()) std::cout << "Thumb16_SoftwareInterrupt:\t" << std::hex << instruction << std::dec << "\n";
+                return &softwareInterrupt;
+            }
+            if ((bits5432109876 & 0b1111111100) == 0b1101111000) {
+                std::cout << "UNDEFINED THUMB INS:\t" << std::hex << instruction << std::dec << "\n";
+                cpu->PRINTSTATE();
+                return &undefined;
+            }
+            if ((bits5432109876 & 0b1111000000) == 0b1101000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_ConditionalBranch:\t" << std::hex << instruction << std::dec << "\n";
+                return &conditionalBranch;
+            }
+            if ((bits5432109876 & 0b1111100000) == 0b1110000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_UnconditionalBranch:\t" << std::hex << instruction << std::dec << "\n";
+                return &unconditionalBranch;
+            }
+            if ((bits5432109876 & 0b1111100000) == 0b1111000000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_LongBranchWithLink_1:\t" << std::hex << instruction << std::dec << "\n";
+                return &longBranchWithLink_1;
+            }
+            if ((bits5432109876 & 0b1110100000) == 0b1110100000) {
+                if (cpu->canPrint()) std::cout << "Thumb16_LongBranchWithLink_2:\t" << std::hex << instruction << std::dec << "\n";
+                return &longBranchWithLink_2;
+            }
+
+            std::cout << "Unimplemented THUMB instruction:\t" << std::hex << instruction << " PC:\t" << cpu->reg[15] - 4 << std::dec << "\n";
+            cpu->PRINTSTATE();
+            return &DEBUG_noop;
         }
     }
 }

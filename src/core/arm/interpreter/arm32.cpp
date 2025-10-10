@@ -844,6 +844,7 @@ namespace Interpreter {
 
         void swi(State* cpu, u32 instruction) {
             cpu->cycles++;
+            // TODO
             cpu->finishInstruction();
         }
 
@@ -851,7 +852,7 @@ namespace Interpreter {
             cpu->cycles++;
             cpu->finishInstruction();
 
-            std::cout << "undefined reached at pc: " << std::hex << cpu->reg[15] << std::dec << "\n";
+            std::cout << "arm undefined reached at pc: " << std::hex << cpu->reg[15] - 4 << std::dec << "\n";
             cpu->PRINTSTATE();
         }
 
