@@ -61,7 +61,7 @@ namespace Interpreter {
         void moveCompareAddSubtractImmediate(State* cpu, u16 instruction) {
             cpu->cycles++;
             int op = (instruction >> 11) & 0b11;
-            u32 rd = (instruction << 8) & 0b111;
+            u32 rd = (instruction >> 8) & 0b111;
             u32 nn = instruction & 0xff;
 
             switch (op) {
@@ -222,7 +222,7 @@ namespace Interpreter {
                     cpu->cpsr.t = (bool)(cpu->reg[rs] & 1);
                     u32 addr = cpu->reg[rs] + (rs == 15) * 0;
                     if (rd_3)
-                        cpu->reg[14] = cpu->reg[15] - 2 + 1; // Thumb bit set
+                        cpu->reg[14] = (cpu->reg[15] - 2) | 1; // Thumb bit set
                     cpu->reg[15] = addr;
                     cpu->issuePipelineFlush();
                     break;
@@ -500,6 +500,9 @@ namespace Interpreter {
             }
 
             s32 nn = (s32)(s8)(instruction & 0xff);
+            // u32 nn = instruction & 0xff;
+            // nn |= ~(u32)(0xff) * (nn >> 7);
+
             cpu->reg[15] += nn * 2;
             cpu->issuePipelineFlush();
 
@@ -532,7 +535,7 @@ namespace Interpreter {
             u32 nn = instruction & 0x7ff;
 
             u32 addr = cpu->reg[14] + (nn << 1);
-            cpu->reg[14] = cpu->reg[15] - 2 + 1; // Thumb bit set
+            cpu->reg[14] = (cpu->reg[15] - 2) | 1; // Thumb bit set
             cpu->reg[15] = addr;
             if (!normalBl) {
                 if (cpu->type != Type::Arm9) {
@@ -549,6 +552,8 @@ namespace Interpreter {
             cpu->cycles++;
             // TODO
             cpu->finishInstruction();
+
+            lilds__crash();
         }
 
         // undefined

@@ -846,6 +846,8 @@ namespace Interpreter {
             cpu->cycles++;
             // TODO
             cpu->finishInstruction();
+
+            lilds__crash();
         }
 
         void und(State* cpu, u32 instruction) {

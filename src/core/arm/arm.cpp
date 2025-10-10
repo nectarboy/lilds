@@ -265,7 +265,6 @@ inline void State::pipelineFetch(bool thumb) {
 
 // initialization methods
 void State::initialize() {
-    thumbLongBranchStage = false;
     issuePipelineFlush();
     finishInstruction();
 
