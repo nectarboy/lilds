@@ -588,7 +588,7 @@ namespace Interpreter {
                 }
 
                 addr += !p * off;
-                if ((w || p == 0) && (rd != rn || !l)) // TODO: check if the second half of this condition is correct behavior
+                if ((w || !p) && (rd != rn || !l)) // TODO: check if the second half of this condition is correct behavior
                     cpu->writeReg(rn, addr);
             }
             else {
@@ -650,8 +650,10 @@ namespace Interpreter {
                         break;
                     }
                     case 2: // LDRD (ARM9)
+                        lilds__crash();
                         break;
                     case 3: // STRD (ARM9)
+                        lilds__crash();
                         break;
                     // When Bit 20 L=1 (Load):
                     case 5: { // LDRH
@@ -695,7 +697,7 @@ namespace Interpreter {
                 }
 
                 addr += !p * off;
-                if ((w || p == 0) && (rd != rn || !l)) { // NOTE: this is the same condition as Single Data Transfer (i assume)
+                if ((w || !p) && (rd != rn || !l)) { // NOTE: this is the same condition as Single Data Transfer (i assume)
                     cpu->writeReg(rn, addr);
                 }
             }

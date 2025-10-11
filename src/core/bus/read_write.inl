@@ -241,6 +241,7 @@ namespace Bus {
             case 3: {
                 // Shared WRAM
                 if (addr < 0x0380'0000) {
+                    lilds__crash();
                     return 0;
                 }
                 // ARM7-WRAM
@@ -291,10 +292,11 @@ namespace Bus {
             case 3: {
                 // Shared WRAM
                 if (addr < 0x0380'0000) {
-
+                    lilds__crash();
                 }
                 // ARM7-WRAM
                 else {
+                    // printf("Arm7 writes to ARM7-WRAM %x <- %x \n", addr, val);
                     addr &= 0xffff;
                     if constexpr (is_same_v<T, u8>)
                         write8(arm7Ram, addr, val);

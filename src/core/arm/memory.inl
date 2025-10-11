@@ -36,14 +36,14 @@ namespace Arm {
     inline void State::write16(u32 addr, u16 val, Access access) {
         Bus::State* bus = static_cast<Bus::State*>(ds->bus);
         if (type == Type::Arm7)
-            bus->arm9Write<u16, AccessType::Data>(this, addr, val, access);
+            bus->arm7Write<u16, AccessType::Data>(this, addr, val, access);
         else
             bus->arm9Write<u16, AccessType::Data>(this, addr, val, access);
     }
     inline void State::write32(u32 addr, u32 val, Access access) {
         Bus::State* bus = static_cast<Bus::State*>(ds->bus);
         if (type == Type::Arm7)
-            bus->arm9Write<u32, AccessType::Data>(this, addr, val, access);
+            bus->arm7Write<u32, AccessType::Data>(this, addr, val, access);
         else
             bus->arm9Write<u32, AccessType::Data>(this, addr, val, access);
     }

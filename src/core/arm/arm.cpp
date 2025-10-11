@@ -211,10 +211,10 @@ void State::execute() {
             }
         }
 
-        // if (reg[15] < 0x0200'0000 || reg[15] >= 0x0400'0000) {
-        //     printf("%s R15 outside main or shared mem: %X, before: %X\n", getTypeString().c_str(), reg[15], oldPc-8);
-        //     lilds__crash();
-        // }
+        if (reg[15] < 0x0200'0000 || reg[15] >= 0x0400'0000) {
+            printf("%s R15 outside main or shared mem: %X, before: %X\n", getTypeString().c_str(), reg[15], oldPc-8);
+            lilds__crash();
+        }
     }
 
     // TODO: theres a second execution stage where exceptions are handled
