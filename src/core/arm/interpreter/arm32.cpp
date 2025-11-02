@@ -333,7 +333,7 @@ namespace Interpreter {
                         u32 a = (s32)halfRs * (s32)halfRm;
                         u32 res = a + cpu->reg[rdLo];
                         cpu->writeReg(rdHi, res);
-                        cpu->cpsr.q = (~(a ^ cpu->reg[rdLo]) & (a ^ u32(res))) >> 31;
+                        cpu->cpsr.q |= (bool)((~(a ^ cpu->reg[rdLo]) & (a ^ u32(res))) >> 31);
                         cpu->finishInstruction();
                         break;
                     }
@@ -341,8 +341,7 @@ namespace Interpreter {
                         u32 a = ((s32)halfRs * (s32)cpu->reg[rm]) >> 16; // TODO: is them being s32 wrong? its a 48 bit result with bottom 16 shifted right
                         u32 res = a + !x * cpu->reg[rdLo];
                         cpu->writeReg(rdHi, res);
-                        if (!x)
-                            cpu->cpsr.q = (~(a ^ cpu->reg[rdLo]) & (a ^ u32(res))) >> 31;
+                        cpu->cpsr.q |= (bool)(!x * (~(a ^ cpu->reg[rdLo]) & (a ^ u32(res))) >> 31);
                         cpu->finishInstruction();
                         break;
                     }
@@ -600,10 +599,10 @@ namespace Interpreter {
                         break;
                     }
                     case 2: // LDRD (ARM9)
-                        lilds__crash();
+                        // lilds__crash();
                         break;
                     case 3: // STRD (ARM9)
-                        lilds__crash();
+                        // lilds__crash();
                         break;
                     // When Bit 20 L=1 (Load):
                     case 5: { // LDRH
