@@ -24,8 +24,7 @@ namespace Bus {
         }
 
         // Create rom array
-        if (rom)
-            delete[] rom;
+        if (rom) delete[] rom;
         rom = new u8[romSize];
         for (u32 i = 0; i < romSize; i++) {
             if (i < fileSize)

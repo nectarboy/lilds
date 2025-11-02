@@ -35,6 +35,9 @@ namespace Bus {
 
     struct State {
         State() {}
+        ~State() {
+            if (rom) delete[] rom;
+        }
 
         int test = 0;
 

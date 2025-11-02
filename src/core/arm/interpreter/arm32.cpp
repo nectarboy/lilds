@@ -601,7 +601,10 @@ namespace Interpreter {
                     case 2: // LDRD (ARM9)
                         if (cpu->type != Type::Arm9)
                             lilds__crash();
-                        rd &= ~1;
+                        if (rd & 1) {
+                            printf("TODO: undefined exception\n");
+                            lilds__crash();
+                        }
                         addr &= ~3;
                         cpu->reg[rd] = cpu->read32(addr, Access::N);
                         cpu->writeReg(rd + 1, cpu->read32(addr + 4, Access::S));
@@ -609,7 +612,10 @@ namespace Interpreter {
                     case 3: // STRD (ARM9)
                         if (cpu->type != Type::Arm9)
                             lilds__crash();
-                        rd &= ~1;
+                        if (rd & 1) {
+                            printf("TODO: undefined exception\n");
+                            lilds__crash();
+                        }
                         addr &= ~3;
                         cpu->write32(addr, cpu->reg[rd], Access::N);
                         cpu->write32(addr + 4, cpu->reg[rd + 1], Access::S);

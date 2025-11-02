@@ -139,8 +139,9 @@ void State::execute() {
 
     // TODO: (Arm9) implement seperate data fetch and code fetch waitstates.
     // Specifically, code fetch waitstates stall the pipeline, while data fetch waitstates don't, due to seperate code and data paths.
-    if (waitstates) {
-        waitstates--;
+
+    // Code waitstates
+    if (codeWaitstates != 0) {
         cycles++;
     }
     else {
@@ -159,6 +160,10 @@ void State::execute() {
                 nextInstructionAccessType = Access::S;
                 pipelineStage = 2;
             }
+            cycles++;
+        }
+        // Data waitstates
+        else if (dataWaitstates != 0) {
             cycles++;
         }
         // Execution starts
@@ -219,6 +224,9 @@ void State::execute() {
         }
     }
 
+    codeWaitstates -= (codeWaitstates != 0);
+    dataWaitstates -= (dataWaitstates != 0);
+
     // TODO: theres a second execution stage where exceptions are handled
 }
 void State::handleException() {
@@ -271,6 +279,8 @@ inline void State::pipelineFetch(bool thumb) {
 void State::initialize() {
     issuePipelineFlush();
     finishInstruction();
+    codeWaitstates = 0;
+    dataWaitstates = 0;
 
     cpsr.t = false;
     cpsr.mode = Mode::System;

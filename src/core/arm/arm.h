@@ -40,7 +40,7 @@ namespace Arm {
 
     enum class Exception {
         Reset,
-        UndefinedInstruction,
+        Undefined,
         SWI,
         PrefetchAbort,
         DataAbort,
@@ -102,6 +102,9 @@ namespace Arm {
         inline u32 readCode32(u32 addr, Access access);
 
         // waitstate methods
+        template <AccessType type> inline void addWaitstates(u32 cycles);
+        template <AccessType type> inline void addWaitstates9(u32 cycles);
+        template <AccessType type> inline void addWaitstates7(u32 cycles);
         template <AccessType type, AccessWidth width> inline void addMainMemoryWaitstates9(Access access);
         template <AccessType type, AccessWidth width> inline void addSharedMemoryWaitstates9(Access access);
         template <AccessType type, AccessWidth width> inline void addVRAMWaitstates9(Access access);
@@ -165,7 +168,8 @@ namespace Arm {
         u32 tmp[16]; // used in instruction functions
         u32 cycles = 0;
         bool evenClock = false;
-        u32 waitstates = 0;
+        u32 codeWaitstates = 0;
+        u32 dataWaitstates = 0;
         Access nextInstructionAccessType = Access::S;
 
     private:
