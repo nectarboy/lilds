@@ -173,7 +173,7 @@ namespace Interpreter {
                     }
                     case 0xD: { // MULS
                         u32 res = (u64)cpu->reg[rd] * (u64)cpu->reg[rs];
-                        cpu->writeReg(rd, res);
+                        cpu->reg[rd] = res;
                         mul32SetNZCFlags(cpu, res);
                         if (cpu->type == Type::Arm7)
                             cpu->tmp[0] = mulGetICycles(cpu->reg[rs], false);
@@ -223,7 +223,7 @@ namespace Interpreter {
                 }
                 case 3: { // BX / BLX
                     cpu->cpsr.t = (bool)(cpu->reg[rs] & 1);
-                    u32 addr = cpu->reg[rs] + (rs == 15) * 0;
+                    u32 addr = cpu->reg[rs];
                     if (rd_3)
                         cpu->reg[14] = (cpu->reg[15] - 2) | 1; // Thumb bit set
                     cpu->reg[15] = addr;

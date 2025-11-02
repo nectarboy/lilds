@@ -17,11 +17,11 @@ namespace Bus {
         switch (addr) {
 
             case IO_DISPSTAT:
-                return rand() & 1;
+                return (test++ & 0xfff) == 0;
                 break;
 
             case IO_KEYINPUT:
-                return static_cast<Joypad::State*>(ds->joypad)->getIOPart_KeyInput();
+                return static_cast<Joypad::State*>(ds->joypad)->getIOPart_KeyInput() & 0xff;
                 break;
             case IO_KEYINPUT + 1:
                 return static_cast<Joypad::State*>(ds->joypad)->getIOPart_KeyInput() >> 8;

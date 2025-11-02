@@ -4,7 +4,7 @@
 namespace Joypad {
 
     void State::initialize() {
-        keysBitmap = 0xffff; // all released
+        keysBitmap = (1 << 12) - 1; // all released
     }
 
     // TODO: seperate SDL keyboard from ts

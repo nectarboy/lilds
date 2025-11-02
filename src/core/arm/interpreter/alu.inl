@@ -25,6 +25,7 @@ namespace Interpreter {
         else {
             if (s)
                 cpu->copySPSRToCPSR();
+            cpu->checkR15Bit0();
             cpu->issuePipelineFlush();
         }
     }

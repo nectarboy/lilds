@@ -17,41 +17,31 @@ namespace Interpreter {
         void bl(State* cpu, u32 instruction) {
             cpu->cycles++;
             if (cpu->exeStage == 0) {
-                CC cc = CC((instruction >> 28) & 0xf);
+                CC cc = static_cast<CC>((instruction >> 28) & 0xf);
                 bool isBlx = (cpu->type == Type::Arm9) & (cc == CC::UND);
                 if (!isBlx && !evalConditionCode(cpu, cc)) {
                     cpu->finishInstruction();
                     return;
                 }
 
+                bool l = (instruction >> 24) & 1;
                 u32 off = instruction & 0xff'ffff;
                 off |= 0xff00'0000 * (off >> 23);
                 off *= 4;
 
-                bool l = (instruction >> 24) & 1;
-                cpu->cpsr.t |= isBlx;
-                off += isBlx * l * 2;
+                cpu->cpsr.t |= (isBlx);
+                off += (isBlx & l) << 1;
                 if (l || isBlx) {
                     cpu->reg[14] = cpu->reg[15] - 4;
                 }
-
-                if (isBlx)
-                    lilds__crash();
-
                 cpu->reg[15] += off;
                 cpu->issuePipelineFlush();
+
                 cpu->finishInstruction();
             }
-            // TODO: would this method be faster?
-            // else if (cpu->exeStage == 1) {
-            //     cpu->pipelineFetch<0, Access::N>(false);
-            // }
-            // else if (cpu->exeStage == 2) {
-            //     cpu->pipelineFetch<1, Access::S>(false);
-            //     // cpu->pipelineStage = 2;
-            //     cpu->finishInstruction();
-            // }
         }
+
+        // TODO: seperate BLX immediate handler?
 
         template <bool thumb>
         void bx(State* cpu, u32 instruction) {
@@ -63,27 +53,15 @@ namespace Interpreter {
                 }
 
                 auto rn = instruction & 0xf;
-                cpu->cpsr.t = ((bool)(cpu->reg[rn] & 1));
+                cpu->cpsr.t = (bool)(cpu->reg[rn] & 1);
                 u32 addr = cpu->reg[rn];
 
-                // if constexpr (thumb) {
-                //     // bx thumb behavior
-                //     if (rn == 15)
-                //         addr &= ~2;
-                // }
                 addr &= 0xffff'fffc;
 
                 cpu->reg[15] = addr;
                 cpu->issuePipelineFlush();
                 cpu->finishInstruction();
             }
-            // else if (cpu->exeStage == 1) {
-            //     cpu->pipelineFetch<0, Access::N>(thumb);
-            // }
-            // else if (cpu->exeStage == 2) {
-            //     cpu->pipelineFetch<1, Access::S>(thumb);
-            //     cpu->finishInstruction();
-            // }
         }
         template void bx<false>(State* cpu, u32 instruction);
         template void bx<true>(State* cpu, u32 instruction);
@@ -98,12 +76,12 @@ namespace Interpreter {
                 }
 
                 auto rn = instruction & 0xf;
-                cpu->cpsr.t = ((bool)(cpu->reg[rn] & 1));
+                cpu->cpsr.t = (bool)(cpu->reg[rn] & 1);
                 u32 addr = cpu->reg[rn];
                 addr &= 0xffff'fffc;
                 
                 if constexpr (thumb)
-                    cpu->reg[14] = cpu->reg[15] - 2 + 1; // Thumb bit set
+                    cpu->reg[14] = (cpu->reg[15] - 2) | 1; // Thumb bit set
                 else
                     cpu->reg[14] = cpu->reg[15] - 4;
 
@@ -317,11 +295,8 @@ namespace Interpreter {
                     res = (s64)((s32)(cpu->reg[rm])) * (s64)((s32)(cpu->reg[rs]));
                     res += a * s64((u64(cpu->reg[rdHi]) << 32) | u64(cpu->reg[rdLo]));
                 }
-                cpu->reg[rdHi] = (u32)(res >> 32);
-                cpu->reg[rdLo] = (u32)res;
-
-                if (rdHi == 15 || rdLo == 15)
-                    cpu->issuePipelineFlush();
+                cpu->writeReg(rdHi, (u32)(res >> 32));
+                cpu->writeReg(rdLo, (u32)res);
 
                 if (s)
                     mul64SetNZCFlags(cpu, res);
@@ -352,63 +327,44 @@ namespace Interpreter {
                 s16 halfRs = (cpu->reg[rs] >> (y*16)) & 0xffff;
 
                 switch (operType) {
-                    case 1: { // SMLAxy
+                    case 0: { // SMLAxy
                         s16 halfRm = (cpu->reg[rm] >> (x*16)) & 0xffff;
 
                         u32 a = (s32)halfRs * (s32)halfRm;
                         u32 res = a + cpu->reg[rdLo];
-                        cpu->reg[rdHi] = res;
+                        cpu->writeReg(rdHi, res);
                         cpu->cpsr.q = (~(a ^ cpu->reg[rdLo]) & (a ^ u32(res))) >> 31;
-
-                        if (rdHi == 15)
-                            cpu->issuePipelineFlush();
                         cpu->finishInstruction();
                         break;
                     }
-                    case 2: { // SMLAWy
-                        u32 a = ((s32)halfRs * (s32)cpu->reg[rm]) / (s32)0x10000;
-                        u32 res = a + cpu->reg[rdLo];
-                        cpu->reg[rdHi] = res;
-                        cpu->cpsr.q = (~(a ^ cpu->reg[rdLo]) & (a ^ u32(res))) >> 31;
-
-                        if (rdHi == 15)
-                            cpu->issuePipelineFlush();
+                    case 1: { // SMLAWy, SMULWy
+                        u32 a = ((s32)halfRs * (s32)cpu->reg[rm]) >> 16; // TODO: is them being s32 wrong? its a 48 bit result with bottom 16 shifted right
+                        u32 res = a + !x * cpu->reg[rdLo];
+                        cpu->writeReg(rdHi, res);
+                        if (!x)
+                            cpu->cpsr.q = (~(a ^ cpu->reg[rdLo]) & (a ^ u32(res))) >> 31;
                         cpu->finishInstruction();
                         break;
                     }
-                    case 3: { // SMULWy
-                        u32 res = ((s32)halfRs * (s32)cpu->reg[rm]) / (s32)0x10000;
-                        cpu->reg[rdHi] = res;
-
-                        if (rdHi == 15)
-                            cpu->issuePipelineFlush();
-                        cpu->finishInstruction();
-                        break;
-                    } 
-                    case 4: { // SMLALxy
+                    case 2: { // SMLALxy
                         s16 halfRm = (cpu->reg[rm] >> (x*16)) & 0xffff;
-                        s64 rdHiLo = (u64(cpu->reg[rdHi]) << 32) | u64(cpu->reg[rdLo]);
+                        s64 rdHiLo = ((u64)cpu->reg[rdHi] << 32) | (u64)cpu->reg[rdLo];
 
                         u64 res = (s64)halfRs * (s64)halfRm + rdHiLo;
-                        cpu->reg[rdHi] = (u32)(res >> 32);
-                        cpu->reg[rdLo] = (u32)res;
-                        if (rdHi == 15 || rdLo == 15)
-                            cpu->issuePipelineFlush();
+                        cpu->writeReg(rdHi, (u32)(res >> 32));
+                        cpu->writeReg(rdLo, (u32)res);
                         break;
                     }
-                    case 5: { // SMULxy
+                    case 3: { // SMULxy
                         s16 halfRm = (cpu->reg[rm] >> (x*16)) & 0xffff;
                         u32 res = (s32)halfRs * (s32)halfRm;
-                        cpu->reg[rdHi] = res;
-
-                        if (rdHi == 15)
-                            cpu->issuePipelineFlush();
+                        cpu->writeReg(rdHi, res);
                         cpu->finishInstruction();
                         break;
                     }
                     default: {
-                        printf("SMUL funny operType %d", operType);
-                        assert(0);
+                        printf("SMUL funny operType %d \n", operType);
+                        lilds__crash();
                     }
                 }
             }
@@ -565,15 +521,9 @@ namespace Interpreter {
 
                 if (l) {
                     if (b)
-                        cpu->reg[rd] = cpu->read8(addr, Access::N);
+                        cpu->writeReg(rd, cpu->read8(addr, Access::N));
                     else
-                        cpu->reg[rd] = bitRotateRight(cpu->read32(addr & 0xffff'fffc, Access::N), 32, (addr & 3)*8);
-
-                    if (rd == 15) {
-                        cpu->issuePipelineFlush();
-                        if (cpu->type == Type::Arm9)
-                            cpu->setThumb(cpu->reg[15] & 1);
-                    }
+                        cpu->writeReg(rd, bitRotateRight(cpu->read32(addr & 0xffff'fffc, Access::N), 32, (addr & 3)*8));
                 }
                 // Store
                 else {
@@ -661,6 +611,8 @@ namespace Interpreter {
                             cpu->writeReg(rd, bitRotateRight(cpu->read16(addr & 0xffff'fffe, Access::N), 32, (addr & 1) * 8)); // Halfword address forcibly aligned, read rotated right by steps of 8 when not aligned
                         else
                             cpu->writeReg(rd, cpu->read16(addr & 0xffff'fffe, Access::N));
+
+                        // TODO: isnt thumb bit supposed to be r15 bit 0 in arm9 for ALL r15 writes??? (except when disabled???)
                         break;
                     }
                     case 6: { // LDRSB
@@ -846,7 +798,7 @@ namespace Interpreter {
             cpu->finishInstruction();
 
             lilds__crash();
-        }
+        } 
 
         void und(State* cpu, u32 instruction) {
             cpu->cycles++;

@@ -15,6 +15,7 @@ u32 State::readReg(int r) {
 void State::writeReg(int r, u32 val) {
     reg[r] = val;
     if (r == 15) {
+        checkR15Bit0();
         issuePipelineFlush();
     }
 }
@@ -151,12 +152,12 @@ void State::execute() {
                 else
                     reg[15] &= 0xffff'fffe;
                 pipelineFetch<0, Access::N>(cpsr.t);
-                pipelineStage++;
+                pipelineStage = 1;
             }
             else {
                 pipelineFetch<1, Access::S>(cpsr.t);
                 nextInstructionAccessType = Access::S;
-                pipelineStage++;
+                pipelineStage = 2;
             }
             cycles++;
         }
@@ -165,6 +166,7 @@ void State::execute() {
             if (exceptionPending) {
                 handleException();
                 exceptionPending = false;
+                cycles++;
             }
             else {
                 currentInstruction = pipeline[0];

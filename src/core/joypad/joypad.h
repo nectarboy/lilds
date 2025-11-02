@@ -32,16 +32,18 @@ namespace Joypad {
         void initialize();
 
         // registers
-        u16 keysBitmap;
+        u32 keysBitmap;
         inline void setKey(Key key, bool pressed) {
-            if (pressed)
-                keysBitmap &= ~(1 << (int)key);
-            else
-                keysBitmap |= (1 << (int)key);
+            // if (pressed)
+            //     keysBitmap &= ~(1 << (int)key);
+            // else
+            //     keysBitmap |= (1 << (int)key);
+
+            keysBitmap ^= (((keysBitmap >> (int)key) & 1) == pressed) << (int)key;
         }
 
         inline u16 getIOPart_KeyInput() {
-            return keysBitmap & 0x1ff;
+            return keysBitmap & 0x3ff;
         }
         inline u16 getIOPart_ExtKeyIn() {
             return (keysBitmap >> 9) & 0b11;

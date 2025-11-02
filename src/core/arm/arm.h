@@ -75,6 +75,13 @@ namespace Arm {
         u32 readUserBankReg(int r);
         void writeUserBankReg(int r, u32 val);
 
+        inline void checkR15Bit0() {
+            if (type == Type::Arm9 && cpsr.mode != Mode::User) {
+                cpsr.t = (bool)(reg[15] & 1);
+                reg[15] &= ~1;
+            }
+        }
+
         u32 readCPSR();
         void writeCPSR(u32 val);
 

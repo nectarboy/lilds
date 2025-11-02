@@ -36,6 +36,8 @@ namespace Bus {
     struct State {
         State() {}
 
+        int test = 0;
+
         // references
         DS::State* ds = nullptr;
 

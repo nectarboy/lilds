@@ -13,17 +13,21 @@ namespace Interpreter {
                     u32 bits7654 = (instruction >> 4) & 0b1111;
 
                     // TODO: can optimize common cases for bits7654, just make sure it works first
-                    if ((bits543210 & 0b111100) == 0b000000 && bits7654 == 0b1001) {// Needs arguments to be rewritten
+                    if ((bits543210 & 0b111100) == 0b000000 && bits7654 == 0b1001) {
                         if (cpu->canPrint()) printf("Mul at %X: %X \n", cpu->reg[15]-8, instruction);
                         return &mul;
                     }
-                    if ((bits543210 & 0b111000) == 0b001000 && bits7654 == 0b1001) {// Needs to be implemented
+                    if ((bits543210 & 0b111000) == 0b001000 && bits7654 == 0b1001) {
                         if (cpu->canPrint()) printf("Mull at %X: %X \n", cpu->reg[15]-8, instruction);
                         return &mull;
                     }
-                    if ((bits543210 & 0b111011) == 0b010000 && bits7654 == 0b1001) { // ^^^
+                    if ((bits543210 & 0b111011) == 0b010000 && bits7654 == 0b1001) {
                         if (cpu->canPrint()) printf("Swp at %X: %X \n", cpu->reg[15]-8, instruction);
                         return &swp;
+                    }
+                    if (cpu->type == Type::Arm9 && (bits543210 & 0b111001) == 0b010000 && (bits7654 & 0b1001) == 0b1000) {
+                        if (cpu->canPrint()) printf("Smul at %X: %X \n", cpu->reg[15]-8, instruction);
+                        return &smul;
                     }
                     if ((bits543210 & 0b100000) == 0b000000 && (bits7654 & 0b1001) == 0b1001) {
                         if (cpu->canPrint()) printf("Ldrh_strh at %X: %X \n", cpu->reg[15]-8, instruction);
@@ -49,6 +53,14 @@ namespace Interpreter {
                             if (cpu->canPrint()) printf("Blx_reg at %X: %X \n", cpu->reg[15]-8, instruction);
                             return &blx_reg<false>;
                         }
+                    }
+                    if (cpu->type == Type::Arm9 && bits543210 == 0b010110 && bits7654 == 0b0001) {
+                        if (cpu->canPrint()) printf("Clz at %X: %X \n", cpu->reg[15]-8, instruction);
+                        return &clz;
+                    }
+                    if (cpu->type == Type::Arm9 && (bits543210 & 0b111001) == 0b010000 && bits7654 == 0b0101) {
+                        if (cpu->canPrint()) printf("Qadd at %X: %X \n", cpu->reg[15]-8, instruction);
+                        return &qadd;
                     }
                     if ((bits543210 & 0b111011) == 0b110000) {
                         if (cpu->canPrint()) printf("Invalid g00 instruction at %X: %X \n", cpu->reg[15]-8, instruction);
@@ -92,7 +104,6 @@ namespace Interpreter {
 
                     if ((bits543210 & 0b110000) == 0b110000) {
                         printf("Swi (r0=%X) at %X: %X \n", cpu->reg[0], cpu->reg[15]-8, instruction);
-                        cpu->PRINTSTATE();
                         return &swi;
                     }
                     printf("%s Unimplemented g11 instruction at %X: %X \n", cpu->getTypeString().c_str(), cpu->reg[15]-8, instruction);

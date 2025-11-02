@@ -6,6 +6,7 @@ namespace Interpreter {
     using namespace Arm;
 
     bool evalConditionCode(State* cpu, CC cc) {
+        [[assume((uint)cc <= 15)]];
         switch (cc) {
             case CC::Z_SET: return cpu->cpsr.z;
             case CC::Z_CLR: return !cpu->cpsr.z;
@@ -23,7 +24,9 @@ namespace Interpreter {
             case CC::Z_SET_OR_N_NEQ_V: return cpu->cpsr.z || (cpu->cpsr.n != cpu->cpsr.v);
             case CC::AL: return true;
             case CC::UND: return false;
-            default: std::cout << "[!] UNDEFINED CONDITION CODE: " << (int)cc << "\n"; assert(0); return false;
+            default:
+                lilds__unreachable();
+                std::cout << "[!] UNDEFINED CONDITION CODE: " << (int)cc << "\n"; assert(0); return false;
         }
     }
 

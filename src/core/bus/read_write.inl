@@ -61,7 +61,7 @@ namespace Bus {
                         arm->addSharedMemoryWaitstates9<accessType, Arm::AccessWidth::Bus16>(access);
                 }
 
-                printf("Arm9 io read %x \n", addr);
+                // printf("Arm9 io read %x \n", addr);
                 T val = io9Read8(addr);
                 if constexpr (!is_same_v<T, u8>) {
                     val |= io9Read8(addr + 1) << 8;
@@ -188,7 +188,6 @@ namespace Bus {
                 int pageId = getVramPageId(addr);
                 VramPage* page = &vramPageTable[pageId];
                 if (!page->empty) {
-                    // printf("Arm9 writes to vram %x <- %x \n", addr, val);
                     addr = page->pAddrBase + getVramPageOffset(addr);
                     if constexpr (is_same_v<T, u8>)
                         write8(vram, addr, val);
