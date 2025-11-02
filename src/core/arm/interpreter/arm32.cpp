@@ -584,8 +584,8 @@ namespace Interpreter {
                 bool i = (instruction >> 22) & 1;
                 bool w = (instruction >> 21) & 1;
                 bool l = (instruction >> 20) & 1;
-                auto rn = (instruction >> 16) & 0xf;
-                auto rd = (instruction >> 12) & 0xf;
+                u32 rn = (instruction >> 16) & 0xf;
+                u32 rd = (instruction >> 12) & 0xf;
 
                 // 8 (6 usable) possible opcodes -- L bit is used as the most significant bit here
                 auto operType = ((instruction >> 5) & 3) | (l << 2); 
@@ -599,10 +599,20 @@ namespace Interpreter {
                         break;
                     }
                     case 2: // LDRD (ARM9)
-                        // lilds__crash();
+                        if (cpu->type != Type::Arm9)
+                            lilds__crash();
+                        rd &= ~1;
+                        addr &= ~3;
+                        cpu->reg[rd] = cpu->read32(addr, Access::N);
+                        cpu->writeReg(rd + 1, cpu->read32(addr + 4, Access::S));
                         break;
                     case 3: // STRD (ARM9)
-                        // lilds__crash();
+                        if (cpu->type != Type::Arm9)
+                            lilds__crash();
+                        rd &= ~1;
+                        addr &= ~3;
+                        cpu->write32(addr, cpu->reg[rd], Access::N);
+                        cpu->write32(addr + 4, cpu->reg[rd + 1], Access::S);
                         break;
                     // When Bit 20 L=1 (Load):
                     case 5: { // LDRH
