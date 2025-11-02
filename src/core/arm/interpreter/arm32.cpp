@@ -397,7 +397,7 @@ namespace Interpreter {
 
             u32 rn = (instruction >> 16) & 0xf;
             u32 rd = (instruction >> 12) & 0xf;
-            u32 rm = (instruction >> 0) & 0xf;
+            u32 rm = instruction & 0xf;
             bool doubleMode = (instruction >> 22) & 1;
             bool subtract = (instruction >> 21) & 1;
 
@@ -406,12 +406,12 @@ namespace Interpreter {
             s64 b = (s64)(s32)cpu->reg[rn];
 
             if (doubleMode) {
-                if (b > 0x3fff'ffff) {
-                    b = 0x7fff'ffff;
+                if (b > 0x3fff'ffffLL) {
+                    b = 0x7fff'ffffLL;
                     cpu->cpsr.q = true;
                 }
-                else if (b < -0x4000'0000) {
-                    b = -0x4000'0000;
+                else if (b < -0x4000'0000LL) {
+                    b = -0x8000'0000LL; // -0x4000'0000 or -0x8000'0000 ??
                     cpu->cpsr.q = true;
                 }
                 else {
@@ -424,12 +424,12 @@ namespace Interpreter {
             else
                 res = a + b;
 
-            if (res > 0x7fff'ffff) {
+            if (res > 0x7fff'ffffLL) {
                 cpu->writeReg(rd, 0x7fff'ffff);
                 cpu->cpsr.q = true;
             }
-            else if (res < -0x8000'0000) {
-                cpu->writeReg(rd, (u32)-0x8000'0000);
+            else if (res < -0x8000'0000LL) {
+                cpu->writeReg(rd, -0x8000'0000);
                 cpu->cpsr.q = true;
             }
             else {
