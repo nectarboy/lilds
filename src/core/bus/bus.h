@@ -80,7 +80,7 @@ namespace Bus {
 
         // vram banks
         static const u32 vramBankStartPAddrLut[9];
-        VramPage vramPageTable[1024]; // ~0x8A4000~ 0x1000000 possible virtual space / 16KB (16KB per page)
+        VramPage vramPageTable[1024]; // ~0x8A4000~ 0x1000000 (16MB) possible virtual space / 16KB (16KB per page)
         VramCnt vramCnt[9];
         void setVramCntAB(int bank, u8 newCnt);
         void setVramCntCD(int bank, u8 newCnt);

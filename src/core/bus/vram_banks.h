@@ -9,11 +9,11 @@ namespace Bus {
 
         inline void setBank(uint bank) {
             assert(bank <= 9);
-            banksSet[bank] = true;
             if (empty)
                 empty = false;
             else
-                overlapping = true;
+                overlapping |= !banksSet[bank];
+            banksSet[bank] = true;
         }
 
         inline void unsetBank(uint bank) {

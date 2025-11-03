@@ -675,6 +675,7 @@ namespace Interpreter {
 
         // TODO: an accurate LDM STM
         // * Arm9 thumb ldm_stm behaves the same as Arm7 ldm_stm? (only writeback or all quirks?)
+        // * Arm9 ldm is forced aligned
         template <bool thumb>
         void ldm_stm(State* cpu, u32 instruction) {
             cpu->cycles++;
